@@ -1,0 +1,70 @@
+EQUISWAP MILESTONE 1 (WEEKS 3-4)
+FOUNDATION ARCHITECTURE FLOW (WEEK 3 ALIGNED)
+==============================================
+
++--------------------------------------------------------------------------------------------------+
+|                                 1) PRESENTATION LAYER (CLIENT)                                  |
+|--------------------------------------------------------------------------------------------------|
+| API Consumers: Swagger UI / Postman (future frontend can connect later)                         |
+| Protocol: HTTPS + JSON (REST)                                                                    |
++--------------------------------------------------------------------------------------------------+
+                                            |
+                                            | REST API calls
+                                            v
++--------------------------------------------------------------------------------------------------+
+|                            2) APPLICATION LAYER (FASTAPI BACKEND)                               |
+|--------------------------------------------------------------------------------------------------|
+| Entry Point: app/main.py                                                                         |
+| Security: OAuth2 password flow + JWT Bearer token validation                                     |
+|                                                                                                  |
+| Routers and Endpoints                                                                            |
+| - /auth       : POST /register, POST /login, GET /me                                             |
+| - /users      : POST /, GET /, GET /{user_id}, PUT /{user_id}, DELETE /{user_id}                |
+| - /items      : POST /, GET /, GET /{item_id}, PUT /{item_id}, DELETE /{item_id}                |
+| - /wishlists  : POST /, GET /, DELETE /{wishlist_id}                                             |
+| - /health     : GET /health                                                                       |
++--------------------------------------------------------------------------------------------------+
+                                            |
+                                            | SQLAlchemy ORM operations
+                                            v
++--------------------------------------------------------------------------------------------------+
+|                      3) DATA LAYER (SQLALCHEMY + RELATIONAL DATABASE)                            |
+|--------------------------------------------------------------------------------------------------|
+| Runtime DB:                                                                                      |
+| - SQLite (default for local development)                                                         |
+| - PostgreSQL (when DATABASE_URL is configured)                                                   |
+|                                                                                                  |
+| Core Milestone-1 Tables                                                                          |
+| - users                                                                                            |
+| - categories                                                                                      |
+| - items                                                                                           |
+| - wishlists                                                                                       |
++--------------------------------------------------------------------------------------------------+
+
+
++--------------------------------------------------------------------------------------------------+
+|                              4) QUALITY LAYER (INITIAL TESTS)                                   |
+|--------------------------------------------------------------------------------------------------|
+| Test Suite: tests/test_crud.py                                                                    |
+| Coverage:                                                                                         |
+| - User register/login                                                                             |
+| - Authenticated users CRUD flow                                                                   |
+| - Items CRUD flow                                                                                 |
+| - Wishlists CRUD flow                                                                             |
+| Role in flow: validates auth + CRUD endpoints                                                     |
++--------------------------------------------------------------------------------------------------+
+
+
+DATA FLOW SUMMARY
+-----------------
+Client/API Consumer -> FastAPI Routers -> SQLAlchemy ORM -> Database Tables
+Tests --------------> Verify auth + CRUD behavior across the application layer
+
+
+FUTURE SCOPE (NOT PART OF WEEK 3 FOUNDATION)
+---------------------------------------------
+- Swap-cycle matching engine (graph-based)
+- Swap proposals and swap history workflows
+- Preference filtering and trust logs
+- Notification services
+- Full CI/CD and production deployment hardening
