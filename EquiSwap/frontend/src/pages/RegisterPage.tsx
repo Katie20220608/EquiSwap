@@ -22,6 +22,9 @@ export function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
+    useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "submitted">(
     "idle",
@@ -113,17 +116,28 @@ export function RegisterPage() {
 
         <div className="auth-field">
           <label htmlFor="register-password">Password</label>
-          <input
-            id="register-password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            aria-invalid={Boolean(errors.password)}
-            aria-describedby={
-              errors.password ? "register-password-error" : undefined
-            }
-            autoComplete="new-password"
-          />
+          <div className="password-input">
+            <input
+              id="register-password"
+              type={isPasswordVisible ? "text" : "password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={
+                errors.password ? "register-password-error" : undefined
+              }
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+              aria-pressed={isPasswordVisible}
+              onClick={() => setIsPasswordVisible((visible) => !visible)}
+            >
+              {isPasswordVisible ? "Hide" : "Show"}
+            </button>
+          </div>
           {errors.password && (
             <p className="field-error" id="register-password-error">
               {errors.password}
@@ -133,19 +147,34 @@ export function RegisterPage() {
 
         <div className="auth-field">
           <label htmlFor="register-confirm-password">Confirm password</label>
-          <input
-            id="register-confirm-password"
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            aria-invalid={Boolean(errors.confirmPassword)}
-            aria-describedby={
-              errors.confirmPassword
-                ? "register-confirm-password-error"
-                : undefined
-            }
-            autoComplete="new-password"
-          />
+          <div className="password-input">
+            <input
+              id="register-confirm-password"
+              type={isConfirmPasswordVisible ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              aria-invalid={Boolean(errors.confirmPassword)}
+              aria-describedby={
+                errors.confirmPassword
+                  ? "register-confirm-password-error"
+                  : undefined
+              }
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              aria-label={
+                isConfirmPasswordVisible
+                  ? "Hide confirm password"
+                  : "Show confirm password"
+              }
+              aria-pressed={isConfirmPasswordVisible}
+              onClick={() => setIsConfirmPasswordVisible((visible) => !visible)}
+            >
+              {isConfirmPasswordVisible ? "Hide" : "Show"}
+            </button>
+          </div>
           {errors.confirmPassword && (
             <p className="field-error" id="register-confirm-password-error">
               {errors.confirmPassword}

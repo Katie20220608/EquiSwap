@@ -101,6 +101,33 @@
   border-color: var(--rose);
 }
 
+.password-input {
+  position: relative;
+}
+
+.password-input input {
+  width: 100%;
+  padding-right: 68px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  padding: 4px 6px;
+  border: 0;
+  color: var(--sea);
+  background: transparent;
+  font: 700 12px var(--mono);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--sea);
+  outline-offset: 2px;
+}
+
 .field-error {
   margin: 0;
   color: var(--rose);

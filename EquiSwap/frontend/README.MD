@@ -84,6 +84,18 @@ If it is not set, the app defaults to `http://localhost:8000`.
 npm test
 ```
 
+## Test coverage
+
+Coverage is measured with `@vitest/coverage-v8` and configured in `vitest.config.ts`
+with an 80% statement threshold (branch coverage is not enforced):
+
+```bash
+npm run test:coverage
+```
+
+Current coverage is around 93% statements across `src/`. An HTML report is written
+to `coverage/index.html`.
+
 ## Run lint
 
 ```bash

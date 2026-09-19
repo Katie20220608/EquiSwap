@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
-import { ApiError, getUserTrustScore } from "../lib/api";
+import { ApiError, changePassword, getUserTrustScore } from "../lib/api";
 import type { ApiTrustLog } from "../lib/api";
 import { TopNav } from "../components/TopNav";
 import "./Auth.css";
@@ -24,6 +25,19 @@ export function ProfilePage() {
     "loading" | "ready" | "error"
   >("loading");
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] =
+    useState(false);
+  const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
+    useState(false);
+  const [passwordStatus, setPasswordStatus] = useState<"idle" | "submitting">(
+    "idle",
+  );
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -66,6 +80,34 @@ export function ProfilePage() {
     return <Navigate to="/login" replace />;
   }
 
+  async function handlePasswordChange(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirmation must match.");
+      return;
+    }
+
+    setPasswordStatus("submitting");
+    try {
+      await changePassword({ currentPassword, newPassword });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordSuccess("Password updated successfully.");
+    } catch (err) {
+      setPasswordError(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to update your password.",
+      );
+    } finally {
+      setPasswordStatus("idle");
+    }
+  }
+
   return (
     <main className="profile-shell">
       <TopNav eyebrow="EquiSwap / your account" heading="Your profile" />
@@ -91,6 +133,117 @@ export function ProfilePage() {
             <dd>{user.is_active ? "Active" : "Inactive"}</dd>
           </div>
         </dl>
+
+        <section className="trust-history" aria-labelledby="password-heading">
+          <h3 id="password-heading">Change password</h3>
+          <form
+            className="auth-form"
+            onSubmit={handlePasswordChange}
+            noValidate
+          >
+            <div className="auth-field">
+              <label htmlFor="current-password">Current password</label>
+              <div className="password-input">
+                <input
+                  id="current-password"
+                  type={isCurrentPasswordVisible ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(event) => setCurrentPassword(event.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  aria-label={
+                    isCurrentPasswordVisible
+                      ? "Hide current password"
+                      : "Show current password"
+                  }
+                  aria-pressed={isCurrentPasswordVisible}
+                  onClick={() =>
+                    setIsCurrentPasswordVisible((visible) => !visible)
+                  }
+                >
+                  {isCurrentPasswordVisible ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+            <div className="auth-field">
+              <label htmlFor="new-password">New password</label>
+              <div className="password-input">
+                <input
+                  id="new-password"
+                  type={isNewPasswordVisible ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  minLength={6}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  aria-label={
+                    isNewPasswordVisible
+                      ? "Hide new password"
+                      : "Show new password"
+                  }
+                  aria-pressed={isNewPasswordVisible}
+                  onClick={() => setIsNewPasswordVisible((visible) => !visible)}
+                >
+                  {isNewPasswordVisible ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+            <div className="auth-field">
+              <label htmlFor="confirm-password">Confirm new password</label>
+              <div className="password-input">
+                <input
+                  id="confirm-password"
+                  type={isConfirmPasswordVisible ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  minLength={6}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  aria-label={
+                    isConfirmPasswordVisible
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                  aria-pressed={isConfirmPasswordVisible}
+                  onClick={() =>
+                    setIsConfirmPasswordVisible((visible) => !visible)
+                  }
+                >
+                  {isConfirmPasswordVisible ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+            {passwordError && (
+              <p className="field-error" role="alert">
+                {passwordError}
+              </p>
+            )}
+            {passwordSuccess && (
+              <p className="form-success">{passwordSuccess}</p>
+            )}
+            <button
+              type="submit"
+              className="auth-submit"
+              disabled={passwordStatus === "submitting"}
+            >
+              {passwordStatus === "submitting"
+                ? "Updating..."
+                : "Update password"}
+            </button>
+          </form>
+        </section>
 
         <section
           className="trust-history"
