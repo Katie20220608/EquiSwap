@@ -1,0 +1,39 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;600;700&family=Space+Grotesk:wght@500;600&display=swap");
+
+:root {
+  --ink: #14181a;
+  --muted: #454f52;
+  --paper: #fbfaf6;
+  --line: #d8ded9;
+  --green: #4a7f5f;
+  --ochre: #a3611f;
+  --sea: #2a6668;
+  --rose: #a14554;
+  --display: "Space Grotesk", sans-serif;
+  --body: "Manrope", sans-serif;
+  --mono: "DM Mono", monospace;
+  font-family: var(--body);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  background: #eef3ec;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  line-height: 1.6;
+  background:
+    radial-gradient(circle at 12% 0%, #fbf7ea 0, transparent 38%),
+    radial-gradient(circle at 88% 100%, #e2eee7 0, transparent 45%),
+    linear-gradient(180deg, #f1f5ee 0%, #e6ede6 100%);
+}
+button {
+  font-family: inherit;
+}

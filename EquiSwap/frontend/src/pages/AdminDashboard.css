@@ -1,0 +1,103 @@
+.admin-panel {
+  max-width: 900px;
+  margin: 24px auto 0;
+  padding: 24px 26px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: 0 16px 32px -26px rgba(20, 24, 26, 0.24);
+}
+
+.admin-panel h2 {
+  margin: 0 0 20px;
+  font: 600 20px var(--display);
+  color: var(--ink);
+}
+
+.admin-user-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-user-card {
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.admin-user-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.admin-user-header h3 {
+  margin: 0;
+  font: 600 16px var(--display);
+}
+
+.admin-user-email {
+  margin: 2px 0 0;
+  font: 400 13px var(--mono);
+  color: var(--ink-muted, #666);
+}
+
+.admin-user-stats {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+}
+
+.admin-user-stats div {
+  text-align: right;
+}
+
+.admin-user-stats dt {
+  font: 700 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ink-muted, #666);
+}
+
+.admin-user-stats dd {
+  margin: 2px 0 0;
+  font: 600 14px var(--mono);
+}
+
+.admin-user-card h4 {
+  margin: 0 0 8px;
+  font: 600 13px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: 400 14px var(--mono);
+}
+
+.admin-item-status {
+  font: 700 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
