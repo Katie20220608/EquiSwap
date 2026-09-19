@@ -74,6 +74,27 @@ describe("LoginPage", () => {
     await waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/profile"));
   });
 
+  it("shows and hides the password on request", async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      login: vi.fn(),
+      logout: vi.fn(),
+      user: null,
+      isLoading: false,
+    });
+
+    const user = userEvent.setup();
+    renderLoginPage();
+
+    const password = screen.getByLabelText("Password");
+    expect(password).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("button", { name: "Show password" }));
+    expect(password).toHaveAttribute("type", "text");
+
+    await user.click(screen.getByRole("button", { name: "Hide password" }));
+    expect(password).toHaveAttribute("type", "password");
+  });
+
   it("shows the server error message when login fails", async () => {
     const login = vi
       .fn()
