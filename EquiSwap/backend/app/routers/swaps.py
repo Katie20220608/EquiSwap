@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app import auth, models, schemas
 from app.database import get_db
-from app.graph import build_swap_graph, find_elementary_cycles
+from app.graph import build_swap_graph, find_elementary_cycles, get_blocked_pairs, preference_pair
 from app.tarjan import TarjanSCC
 
 router = APIRouter()
@@ -139,19 +139,6 @@ def find_swap_cycles(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    # Blacklisted pairs (either direction) are excluded from proposed cycles.
-    blacklist_rows = (
-        db.query(models.UserPreference.user_id, models.UserPreference.avoid_user_id)
-        .filter(
-            (models.UserPreference.user_id == current_user.user_id)
-            | (models.UserPreference.avoid_user_id == current_user.user_id)
-        )
-        .all()
-    )
-    blacklisted_ids: set[int] = set()
-    for owner_id, avoid_id in blacklist_rows:
-        blacklisted_ids.add(avoid_id if owner_id == current_user.user_id else owner_id)
-
     graph = build_swap_graph(db)
     sccs = TarjanSCC(graph).cycles()
 
@@ -167,8 +154,6 @@ def find_swap_cycles(
             continue
         for cycle in find_elementary_cycles(graph, nodes=set(scc)):
             if user_id not in cycle:
-                continue
-            if blacklisted_ids.intersection(cycle):
                 continue
             key = tuple(cycle)
             if key in seen:
@@ -222,6 +207,7 @@ def _find_cycle_edges(user_ids: list[int], db: Session) -> list[tuple[int, int, 
     """
     cycle_users = set(user_ids)
     start_user_id = user_ids[0]
+    blocked_pairs = get_blocked_pairs(db)
 
     def backtrack(
         wisher_id: int, visited: set[int], edges: list[tuple[int, int, int]]
@@ -247,6 +233,8 @@ def _find_cycle_edges(user_ids: list[int], db: Session) -> list[tuple[int, int, 
 
         for _, item in rows:
             owner_id = item.owner_id
+            if preference_pair(wisher_id, owner_id) in blocked_pairs:
+                continue
             if owner_id == start_user_id and not is_last_step:
                 continue
             result = backtrack(
@@ -259,6 +247,45 @@ def _find_cycle_edges(user_ids: list[int], db: Session) -> list[tuple[int, int, 
         return None
 
     return backtrack(start_user_id, set(), [])
+
+
+def _learn_rejection_preferences(
+    proposal: models.SwapProposal,
+    rejection_reason: str | None,
+    db: Session,
+) -> None:
+    """Avoid proposing future cycles to the participants a user rejected."""
+    participant_ids = {
+        user_id
+        for giver_id, receiver_id in db.query(
+            models.SwapProposal.giver_id,
+            models.SwapProposal.receiver_id,
+        )
+        .filter(models.SwapProposal.cycle_id == proposal.cycle_id)
+        .all()
+        for user_id in (giver_id, receiver_id)
+    }
+    learned_reason = "Learned from rejected swap"
+    if rejection_reason:
+        learned_reason = f"Rejected swap: {rejection_reason}"[:100]
+
+    for participant_id in participant_ids - {proposal.giver_id}:
+        exists = (
+            db.query(models.UserPreference.uf_id)
+            .filter(
+                models.UserPreference.user_id == proposal.giver_id,
+                models.UserPreference.avoid_user_id == participant_id,
+            )
+            .first()
+        )
+        if not exists:
+            db.add(
+                models.UserPreference(
+                    user_id=proposal.giver_id,
+                    avoid_user_id=participant_id,
+                    reason=learned_reason,
+                )
+            )
 
 
 @router.post(
@@ -373,6 +400,7 @@ def respond_to_proposal(
 
     if body.decision == "rejected":
         _cancel_cycle(cycle_id, db)
+        _learn_rejection_preferences(proposal, body.rejection_reason, db)
 
         current_user.rejection_count += 1
         current_user.trust_score = max(0, min(200, current_user.trust_score + _TRUST_DELTA_REJECT))

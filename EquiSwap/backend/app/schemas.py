@@ -27,6 +27,11 @@ class UserUpdate(BaseModel):
     is_active: bool | None = None
 
 
+class PasswordUpdate(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=6, max_length=128)
+
+
 class UserRead(UserBase):
     model_config = ConfigDict(from_attributes=True)
 

@@ -5,6 +5,22 @@ from sqlalchemy.orm import Session
 from app import models
 
 
+def preference_pair(user_id: int, other_user_id: int) -> tuple[int, int]:
+    """Return a direction-independent identifier for a user pairing."""
+    return tuple(sorted((user_id, other_user_id)))
+
+
+def get_blocked_pairs(db: Session) -> set[tuple[int, int]]:
+    """Return pairings blocked by either participant's saved preference."""
+    return {
+        preference_pair(user_id, avoid_user_id)
+        for user_id, avoid_user_id in db.query(
+            models.UserPreference.user_id,
+            models.UserPreference.avoid_user_id,
+        ).all()
+    }
+
+
 def build_swap_graph(db: Session) -> dict[int, list[int]]:
     """Return a directed adjacency list representing swap desires.
 
@@ -21,8 +37,11 @@ def build_swap_graph(db: Session) -> dict[int, list[int]]:
         .all()
     )
 
+    blocked_pairs = get_blocked_pairs(db)
     graph: dict[int, list[int]] = {}
     for wisher_id, owner_id in rows:
+        if preference_pair(wisher_id, owner_id) in blocked_pairs:
+            continue
         neighbours = graph.setdefault(wisher_id, [])
         if owner_id not in neighbours:
             neighbours.append(owner_id)

@@ -49,7 +49,7 @@ export function LoginPage() {
     try {
       await login(email, password);
       setStatus("submitted");
-      navigate("/profile");
+      navigate("/dashboard");
     } catch (error) {
       const message =
         error instanceof ApiError

@@ -71,7 +71,9 @@ describe("LoginPage", () => {
     await waitFor(() =>
       expect(login).toHaveBeenCalledWith("mia@example.com", "password1"),
     );
-    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/profile"));
+    await waitFor(() =>
+      expect(navigateMock).toHaveBeenCalledWith("/dashboard"),
+    );
   });
 
   it("shows and hides the password on request", async () => {

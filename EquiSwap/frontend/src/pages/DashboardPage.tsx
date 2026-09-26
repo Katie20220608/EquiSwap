@@ -43,6 +43,7 @@ export function DashboardPage() {
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [error, setError] = useState<string | null>(null);
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [isSwappedItemsOpen, setIsSwappedItemsOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [respondingId, setRespondingId] = useState<number | null>(null);
   const [proposalError, setProposalError] = useState<string | null>(null);
@@ -122,7 +123,12 @@ export function DashboardPage() {
     return <Navigate to="/login" replace />;
   }
 
-  const myItems = items.filter((item) => item.owner_id === user.user_id);
+  const mySwappedItems = items.filter(
+    (item) => item.owner_id === user.user_id && item.status === "swapped",
+  );
+  const myItems = items.filter(
+    (item) => item.owner_id === user.user_id && item.status !== "swapped",
+  );
   const itemsById = new Map(items.map((item) => [item.item_id, item]));
   const namesByUserId = new Map(users.map((u) => [u.user_id, u.name]));
   const wishlistedItemIds = new Set(wishlist.map((entry) => entry.item_id));
@@ -333,6 +339,43 @@ export function DashboardPage() {
                 ))}
               </ul>
             )}
+
+            <button
+              type="button"
+              className="swapped-items-toggle"
+              aria-expanded={isSwappedItemsOpen}
+              aria-controls="swapped-items-content"
+              onClick={() => setIsSwappedItemsOpen((current) => !current)}
+            >
+              <span>My swapped items ({mySwappedItems.length})</span>
+              <span aria-hidden="true">{isSwappedItemsOpen ? "−" : "+"}</span>
+            </button>
+
+            {isSwappedItemsOpen && (
+              <div id="swapped-items-content" className="swapped-items-content">
+                {mySwappedItems.length === 0 ? (
+                  <p className="dashboard-empty">
+                    Completed swap items will appear here.
+                  </p>
+                ) : (
+                  <ul className="dashboard-list">
+                    {mySwappedItems.map((item) => (
+                      <li key={item.item_id} className="dashboard-list-item">
+                        <span>{item.name}</span>
+                        <span className="dashboard-list-actions">
+                          <span className="status-pill status-swapped">
+                            swapped
+                          </span>
+                          <span className="dashboard-list-meta">
+                            Editing disabled after swap
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </section>
 
           <section
@@ -387,16 +430,18 @@ export function DashboardPage() {
                 There are no other available items to browse right now.
               </p>
             ) : (
-              <div className="item-card-grid">
-                {browsableItems.map((item) => (
-                  <ItemBrowseCard
-                    key={item.item_id}
-                    item={item}
-                    ownerName={namesByUserId.get(item.owner_id) ?? "Unknown"}
-                    isWishlisted={wishlistedItemIds.has(item.item_id)}
-                    onAdded={handleWishlistAdded}
-                  />
-                ))}
+              <div className="browse-items-scroll">
+                <div className="item-card-grid">
+                  {browsableItems.map((item) => (
+                    <ItemBrowseCard
+                      key={item.item_id}
+                      item={item}
+                      ownerName={namesByUserId.get(item.owner_id) ?? "Unknown"}
+                      isWishlisted={wishlistedItemIds.has(item.item_id)}
+                      onAdded={handleWishlistAdded}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </section>
@@ -469,55 +514,59 @@ export function DashboardPage() {
                 You have no swap proposals right now.
               </p>
             ) : (
-              <ul className="dashboard-list">
-                {proposals.map((proposal) => {
-                  const item = itemsById.get(proposal.item_id);
-                  const role =
-                    proposal.giver_id === user.user_id ? "giving" : "receiving";
-                  const canRespond =
-                    role === "giving" && proposal.status === "pending";
-                  const isResponding = respondingId === proposal.sp_id;
-                  return (
-                    <li key={proposal.sp_id} className="dashboard-list-item">
-                      <span>
-                        {item ? item.name : `Item #${proposal.item_id}`}
-                        <span className="dashboard-list-meta"> · {role}</span>
-                      </span>
-                      <span className="dashboard-list-actions">
-                        <span
-                          className={`status-pill status-${proposal.status}`}
-                        >
-                          {proposal.status}
+              <div className="dashboard-section-scroll">
+                <ul className="dashboard-list">
+                  {proposals.map((proposal) => {
+                    const item = itemsById.get(proposal.item_id);
+                    const role =
+                      proposal.giver_id === user.user_id
+                        ? "giving"
+                        : "receiving";
+                    const canRespond =
+                      role === "giving" && proposal.status === "pending";
+                    const isResponding = respondingId === proposal.sp_id;
+                    return (
+                      <li key={proposal.sp_id} className="dashboard-list-item">
+                        <span>
+                          {item ? item.name : `Item #${proposal.item_id}`}
+                          <span className="dashboard-list-meta"> · {role}</span>
                         </span>
-                        {canRespond && (
-                          <>
-                            <button
-                              type="button"
-                              className="dashboard-toggle"
-                              disabled={isResponding}
-                              onClick={() =>
-                                handleProposalResponse(proposal, "accepted")
-                              }
-                            >
-                              Accept
-                            </button>
-                            <button
-                              type="button"
-                              className="dashboard-toggle"
-                              disabled={isResponding}
-                              onClick={() =>
-                                handleProposalResponse(proposal, "rejected")
-                              }
-                            >
-                              Reject
-                            </button>
-                          </>
-                        )}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
+                        <span className="dashboard-list-actions">
+                          <span
+                            className={`status-pill status-${proposal.status}`}
+                          >
+                            {proposal.status}
+                          </span>
+                          {canRespond && (
+                            <>
+                              <button
+                                type="button"
+                                className="dashboard-toggle"
+                                disabled={isResponding}
+                                onClick={() =>
+                                  handleProposalResponse(proposal, "accepted")
+                                }
+                              >
+                                Accept
+                              </button>
+                              <button
+                                type="button"
+                                className="dashboard-toggle"
+                                disabled={isResponding}
+                                onClick={() =>
+                                  handleProposalResponse(proposal, "rejected")
+                                }
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             )}
           </section>
 
@@ -531,47 +580,51 @@ export function DashboardPage() {
                 Completed swaps will appear here.
               </p>
             ) : (
-              <ul className="dashboard-list">
-                {swapHistory.map((history) => {
-                  const item = itemsById.get(history.item_id);
-                  const isGiving = history.from_user_id === user.user_id;
-                  const otherUserId = isGiving
-                    ? history.to_user_id
-                    : history.from_user_id;
-                  const otherUser =
-                    namesByUserId.get(otherUserId) ?? `User #${otherUserId}`;
-                  const direction = isGiving ? "Gave" : "Received";
+              <div className="dashboard-section-scroll">
+                <ul className="dashboard-list">
+                  {swapHistory.map((history) => {
+                    const item = itemsById.get(history.item_id);
+                    const isGiving = history.from_user_id === user.user_id;
+                    const otherUserId = isGiving
+                      ? history.to_user_id
+                      : history.from_user_id;
+                    const otherUser =
+                      namesByUserId.get(otherUserId) ?? `User #${otherUserId}`;
+                    const direction = isGiving ? "Gave" : "Received";
 
-                  return (
-                    <li key={history.sh_id} className="history-item">
-                      <div className="history-item-content">
-                        <div className="history-item-title">
-                          <strong>
-                            {item ? item.name : `Item #${history.item_id}`}
-                          </strong>
-                          <span className="dashboard-list-meta">
-                            {direction} {isGiving ? "to" : "from"} {otherUser}
-                          </span>
+                    return (
+                      <li key={history.sh_id} className="history-item">
+                        <div className="history-item-content">
+                          <div className="history-item-title">
+                            <strong>
+                              {item ? item.name : `Item #${history.item_id}`}
+                            </strong>
+                            <span className="dashboard-list-meta">
+                              {direction} {isGiving ? "to" : "from"} {otherUser}
+                            </span>
+                          </div>
+                          {item?.description && (
+                            <p className="history-item-description">
+                              {item.description}
+                            </p>
+                          )}
+                          {history.notes && (
+                            <p className="history-item-notes">
+                              {history.notes}
+                            </p>
+                          )}
                         </div>
-                        {item?.description && (
-                          <p className="history-item-description">
-                            {item.description}
-                          </p>
-                        )}
-                        {history.notes && (
-                          <p className="history-item-notes">{history.notes}</p>
-                        )}
-                      </div>
-                      <time
-                        className="history-item-date"
-                        dateTime={history.swap_date ?? undefined}
-                      >
-                        {formatSwapDate(history.swap_date)}
-                      </time>
-                    </li>
-                  );
-                })}
-              </ul>
+                        <time
+                          className="history-item-date"
+                          dateTime={history.swap_date ?? undefined}
+                        >
+                          {formatSwapDate(history.swap_date)}
+                        </time>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             )}
           </section>
         </div>
