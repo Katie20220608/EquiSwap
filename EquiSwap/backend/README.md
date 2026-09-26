@@ -86,6 +86,24 @@ this, uploaded files can disappear when the service restarts or redeploys.
 pytest -q
 ```
 
+## Test coverage
+
+Coverage is measured with `pytest-cov` and is enabled by default via `pyproject.toml`
+(`addopts = "--cov=app --cov-report=term-missing --cov-fail-under=80"`), so a plain
+`pytest` run prints a per-file coverage table and fails if total statement coverage
+drops below 80%.
+
+```bash
+pytest -q
+```
+
+Current coverage is around 94% statements across `app/`. To generate an HTML report:
+
+```bash
+pytest --cov=app --cov-report=html
+open htmlcov/index.html
+```
+
 ## Tarjan performance benchmark
 
 The project includes a lightweight benchmark script for the SCC algorithm:

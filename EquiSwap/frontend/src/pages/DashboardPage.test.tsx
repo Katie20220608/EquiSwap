@@ -142,6 +142,54 @@ describe("DashboardPage", () => {
     expect(screen.getByText(/giving/)).toBeInTheDocument();
   });
 
+  it("moves swapped items to a read-only section", async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: mockUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    vi.mocked(listItems).mockResolvedValue([
+      {
+        item_id: 1,
+        owner_id: 1,
+        name: "Active puzzle",
+        description: null,
+        category_id: null,
+        condition_score: 8,
+        status: "available",
+        image_url: null,
+      },
+      {
+        item_id: 2,
+        owner_id: 1,
+        name: "Completed swap book",
+        description: null,
+        category_id: null,
+        condition_score: 9,
+        status: "swapped",
+        image_url: null,
+      },
+    ]);
+    vi.mocked(listMyWishlist).mockResolvedValue([]);
+    vi.mocked(listMySwapProposals).mockResolvedValue([]);
+    vi.mocked(listUsers).mockResolvedValue([]);
+
+    renderDashboard();
+
+    await waitFor(() =>
+      expect(screen.getByText("My items (1)")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Completed swap book")).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole("button", { name: /My swapped items \(1\)/ }),
+    );
+    expect(screen.getByText("My swapped items (1)")).toBeInTheDocument();
+    expect(screen.getByText("Completed swap book")).toBeInTheDocument();
+    expect(screen.getByText("Editing disabled after swap")).toBeInTheDocument();
+  });
+
   it("shows accept/reject actions only for pending proposals where the user is the giver", async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,

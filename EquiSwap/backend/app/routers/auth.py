@@ -41,3 +41,22 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
 @router.get("/me", response_model=schemas.UserRead)
 def read_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user
+
+
+@router.patch("/password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(
+    payload: schemas.PasswordUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    if not auth.verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
+    if payload.current_password == payload.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from your current password",
+        )
+
+    current_user.password_hash = auth.get_password_hash(payload.new_password)
+    db.commit()
+    return None

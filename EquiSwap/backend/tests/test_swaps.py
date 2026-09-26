@@ -210,6 +210,20 @@ def test_rejection_cancels_cycle_and_penalises_rejector(client, two_user_cycle):
     assert trust_a["history"][0]["action"] == "rejected_swap"
     assert trust_a["history"][0]["score_change"] == -5
 
+    # The rejection is learned as a reversible preference, preventing the
+    # same pairing from being proposed again.
+    preferences = client.get("/preferences/", headers={"Authorization": f"Bearer {ctx['token_a']}"}).json()
+    assert len(preferences) == 1
+    assert preferences[0]["avoid_user_id"] == ctx["uid_b"]
+    assert preferences[0]["reason"] == "Rejected swap: changed my mind"
+
+    repeat = client.post(
+        "/swaps/propose",
+        json={"user_ids": [ctx["uid_a"], ctx["uid_b"]]},
+        headers={"Authorization": f"Bearer {ctx['token_a']}"},
+    )
+    assert repeat.status_code == 422
+
 
 def test_non_giver_cannot_respond(client, two_user_cycle):
     ctx = two_user_cycle

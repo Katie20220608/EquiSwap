@@ -76,3 +76,40 @@ def test_delete_other_users_profile_forbidden(client):
 
     res = client.delete(f"/users/{user_id_a}", headers=headers_b)
     assert res.status_code == 403
+
+
+def test_user_can_change_password_after_verifying_current_password(client):
+    token = register_and_login(client, "Pia", "pia@example.com", "old-password")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    res = client.patch(
+        "/auth/password",
+        json={"current_password": "old-password", "new_password": "new-password"},
+        headers=headers,
+    )
+    assert res.status_code == 204
+
+    old_login = client.post("/auth/login", data={"username": "pia@example.com", "password": "old-password"})
+    assert old_login.status_code == 401
+    new_login = client.post("/auth/login", data={"username": "pia@example.com", "password": "new-password"})
+    assert new_login.status_code == 200
+
+
+def test_password_change_rejects_wrong_or_reused_current_password(client):
+    token = register_and_login(client, "Quinn", "quinn@example.com", "password123")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    wrong_password = client.patch(
+        "/auth/password",
+        json={"current_password": "incorrect", "new_password": "new-password"},
+        headers=headers,
+    )
+    assert wrong_password.status_code == 400
+    assert wrong_password.json()["detail"] == "Current password is incorrect"
+
+    reused_password = client.patch(
+        "/auth/password",
+        json={"current_password": "password123", "new_password": "password123"},
+        headers=headers,
+    )
+    assert reused_password.status_code == 400
