@@ -86,6 +86,9 @@ export function TopNav({ eyebrow, heading, children }: TopNavProps) {
             <Link to="/dashboard">Dashboard</Link>
             <Link to="/preferences">Preferences</Link>
             {user.role === "admin" && <Link to="/admin">Admin</Link>}
+            <Link to="/profile" className="auth-nav-cta">
+              {user.name} · Trust {user.trust_score}
+            </Link>
             <div className="notification-menu">
               <button
                 type="button"
@@ -136,9 +139,6 @@ export function TopNav({ eyebrow, heading, children }: TopNavProps) {
                 </div>
               )}
             </div>
-            <Link to="/profile" className="auth-nav-cta">
-              {user.name} · Trust {user.trust_score}
-            </Link>
             <button type="button" className="auth-nav-logout" onClick={logout}>
               Log out
             </button>
