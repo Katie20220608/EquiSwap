@@ -10,3 +10,6 @@ ignore = ["B008"]
 [tool.ruff.lint.per-file-ignores]
 # DATABASE_URL env var must be set before importing app.database.
 "tests/conftest.py" = ["E402"]
+
+[tool.pytest.ini_options]
+addopts = "--cov=app --cov-report=term-missing --cov-fail-under=80"

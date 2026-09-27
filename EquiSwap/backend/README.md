@@ -323,3 +323,17 @@ Optional variables:
 - `DATABASE_URL` (default: `sqlite:///./equiswap.db`)
 - `JWT_SECRET_KEY` (set this in real deployments)
 - `ACCESS_TOKEN_EXPIRE_MINUTES` (default: `60`)
+
+### Connect Render deployment to GitHub Actions
+
+The `deploy-backend` job in `.github/workflows/ci.yml` runs after the backend and
+frontend tests, and only deploys pushes to `main`. It triggers Render and waits
+for the live health endpoint before completing.
+
+Add these GitHub repository secrets under **Settings > Secrets and variables >
+Actions**:
+
+```text
+RENDER_DEPLOY_HOOK_URL=<Render deploy hook URL for the backend service>
+BACKEND_HEALTH_URL=https://<your-render-service>.onrender.com/health
+```
