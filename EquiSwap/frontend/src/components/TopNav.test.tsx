@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TopNav } from "./TopNav";
 import { useAuth } from "../lib/AuthContext";
@@ -37,10 +37,30 @@ const memberUser = {
 
 const adminUser = { ...memberUser, role: "admin" };
 
+function CurrentLocation() {
+  const location = useLocation();
+  return (
+    <output data-testid="current-location">
+      {location.pathname}
+      {location.search}
+    </output>
+  );
+}
+
 function renderTopNav() {
   return render(
     <MemoryRouter>
-      <TopNav eyebrow="EquiSwap" heading="Dashboard" />
+      <Routes>
+        <Route
+          path="*"
+          element={
+            <>
+              <TopNav eyebrow="EquiSwap" heading="Dashboard" />
+              <CurrentLocation />
+            </>
+          }
+        />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -184,6 +204,44 @@ describe("TopNav", () => {
 
     await waitFor(() => expect(markNotificationRead).toHaveBeenCalledWith(1));
     expect(screen.queryByText("New swap request")).not.toBeInTheDocument();
+  });
+
+  it("opens the related swap conversation from a message notification", async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: memberUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    const notification = {
+      n_id: 2,
+      user_id: 1,
+      type: "swap_message",
+      message: "New message from Jordan: Meet at the library?",
+      is_read: false,
+      related_cycle_id: "cycle-2",
+    };
+    vi.mocked(listNotifications).mockResolvedValue([notification]);
+    vi.mocked(getUnreadNotificationCount).mockResolvedValue(1);
+    vi.mocked(markNotificationRead).mockResolvedValue({
+      ...notification,
+      is_read: true,
+    });
+
+    const user = userEvent.setup();
+    renderTopNav();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Notifications" }),
+    );
+    await user.click(
+      screen.getByText("New message from Jordan: Meet at the library?"),
+    );
+
+    expect(await screen.findByTestId("current-location")).toHaveTextContent(
+      "/dashboard?openSwap=cycle-2",
+    );
+    await waitFor(() => expect(markNotificationRead).toHaveBeenCalledWith(2));
   });
 
   it("resets notifications when the request fails", async () => {

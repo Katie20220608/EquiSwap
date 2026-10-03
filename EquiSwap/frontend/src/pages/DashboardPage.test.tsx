@@ -14,6 +14,7 @@ import {
   listMySwapHistory,
   listMySwapProposals,
   listMyWishlist,
+  listSwapMessages,
   listUsers,
   proposeSwap,
   respondToSwapProposal,
@@ -33,6 +34,8 @@ vi.mock("../lib/api", async () => {
     listMyWishlist: vi.fn(),
     listMySwapProposals: vi.fn(),
     listMySwapHistory: vi.fn(() => Promise.resolve([])),
+    listSwapMessages: vi.fn(() => Promise.resolve([])),
+    sendSwapMessage: vi.fn(),
     listUsers: vi.fn(),
     createItem: vi.fn(),
     updateItem: vi.fn(),
@@ -55,9 +58,9 @@ const mockUser = {
   is_active: true,
 };
 
-function renderDashboard() {
+function renderDashboard(initialEntry = "/dashboard") {
   return render(
-    <MemoryRouter initialEntries={["/dashboard"]}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/login" element={<p>login page</p>} />
@@ -70,6 +73,7 @@ describe("DashboardPage", () => {
   afterEach(() => {
     vi.clearAllMocks();
     vi.mocked(listMySwapHistory).mockResolvedValue([]);
+    vi.mocked(listSwapMessages).mockResolvedValue([]);
   });
 
   it("redirects to login when there is no authenticated user", () => {
@@ -333,6 +337,40 @@ describe("DashboardPage", () => {
     expect(
       screen.queryByRole("button", { name: "Accept" }),
     ).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", { name: "Swap group messages" }),
+    ).toBeInTheDocument();
+  });
+
+  it("opens the linked swap conversation from a notification URL", async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: mockUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    vi.mocked(listItems).mockResolvedValue([]);
+    vi.mocked(listMyWishlist).mockResolvedValue([]);
+    vi.mocked(listMySwapProposals).mockResolvedValue([
+      {
+        sp_id: 100,
+        cycle_id: "cycle-2",
+        giver_id: 1,
+        receiver_id: 2,
+        item_id: 1,
+        status: "accepted",
+        expires_at: null,
+      },
+    ]);
+    vi.mocked(listUsers).mockResolvedValue([]);
+    vi.mocked(listSwapMessages).mockResolvedValue([]);
+
+    renderDashboard("/dashboard?openSwap=cycle-2");
+
+    expect(
+      await screen.findByRole("region", { name: "Swap group messages" }),
+    ).toBeInTheDocument();
+    expect(listSwapMessages).toHaveBeenCalledWith("cycle-2");
   });
 
   it("rejects a swap proposal and shows an error if the request fails", async () => {

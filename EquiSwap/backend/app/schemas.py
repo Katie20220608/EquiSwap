@@ -139,6 +139,19 @@ class SwapRespondRequest(BaseModel):
     rejection_reason: str | None = None
 
 
+class SwapMessageCreate(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+
+
+class SwapMessageRead(BaseModel):
+    message_id: int
+    cycle_id: UUID
+    sender_id: int
+    sender_name: str
+    message: str
+    created_at: datetime | None = None
+
+
 class SwapHistoryRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

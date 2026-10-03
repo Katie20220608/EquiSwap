@@ -12,7 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine, get_db
-from app.routers import admin, auth, items, notifications, preferences, swaps, users, wishlists
+from app.routers import admin, auth, items, messages, notifications, preferences, swaps, users, wishlists
 from app.routers.swaps import process_expirations
 
 _EXPIRATION_SWEEP_INTERVAL_SECONDS = 300
@@ -67,6 +67,7 @@ app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(items.router, prefix="/items", tags=["items"])
 app.include_router(wishlists.router, prefix="/wishlists", tags=["wishlists"])
 app.include_router(swaps.router, prefix="/swaps", tags=["swaps"])
+app.include_router(messages.router, prefix="/messages", tags=["messages"])
 app.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 app.include_router(preferences.router, prefix="/preferences", tags=["preferences"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])

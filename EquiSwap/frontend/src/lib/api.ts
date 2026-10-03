@@ -54,6 +54,15 @@ export type ApiSwapProposal = {
   rejection_reason?: string | null;
 };
 
+export type ApiSwapMessage = {
+  message_id: number;
+  cycle_id: string;
+  sender_id: number;
+  sender_name: string;
+  message: string;
+  created_at: string | null;
+};
+
 export type ApiTrustLog = {
   tl_id: number;
   user_id: number;
@@ -348,6 +357,19 @@ export function respondToSwapProposal(
   return authedJson<ApiSwapProposal>(`/swaps/${spId}/respond`, "PATCH", {
     decision,
     rejection_reason: rejectionReason ?? null,
+  });
+}
+
+export function listSwapMessages(cycleId: string): Promise<ApiSwapMessage[]> {
+  return authedGet<ApiSwapMessage[]>(`/messages/cycles/${cycleId}`);
+}
+
+export function sendSwapMessage(
+  cycleId: string,
+  message: string,
+): Promise<ApiSwapMessage> {
+  return authedJson<ApiSwapMessage>(`/messages/cycles/${cycleId}`, "POST", {
+    message,
   });
 }
 

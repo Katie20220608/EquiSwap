@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import {
   getUnreadNotificationCount,
@@ -16,6 +16,7 @@ type TopNavProps = {
 
 export function TopNav({ eyebrow, heading, children }: TopNavProps) {
   const { user, isLoading, logout } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<ApiNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -48,9 +49,14 @@ export function TopNav({ eyebrow, heading, children }: TopNavProps) {
     }
 
     loadNotifications();
+    const intervalId = window.setInterval(
+      () => void loadNotifications(),
+      10000,
+    );
 
     return () => {
       cancelled = true;
+      window.clearInterval(intervalId);
     };
   }, [user]);
 
@@ -67,6 +73,16 @@ export function TopNav({ eyebrow, heading, children }: TopNavProps) {
       setUnreadCount((current) => Math.max(0, current - 1));
     } catch {
       // Ignore notification-mark-read errors silently for a lightweight UX.
+    }
+  }
+
+  function handleNotificationClick(notification: ApiNotification) {
+    void handleMarkRead(notification);
+    setIsOpen(false);
+    if (notification.type === "swap_message" && notification.related_cycle_id) {
+      navigate(
+        `/dashboard?openSwap=${encodeURIComponent(notification.related_cycle_id)}`,
+      );
     }
   }
 
@@ -120,10 +136,9 @@ export function TopNav({ eyebrow, heading, children }: TopNavProps) {
                         >
                           <button
                             type="button"
-                            onClick={() => {
-                              void handleMarkRead(notification);
-                              setIsOpen(false);
-                            }}
+                            onClick={() =>
+                              handleNotificationClick(notification)
+                            }
                           >
                             <span className="notification-type">
                               {notification.type.replace("_", " ")}
