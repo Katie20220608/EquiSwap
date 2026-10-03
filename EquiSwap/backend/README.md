@@ -233,6 +233,16 @@ When every proposal is accepted, execution happens automatically. The API transf
 item ownership, marks each item as `swapped`, writes `swap_history` records, adds
 positive trust logs, and creates `swap_completed` notifications.
 
+After accepting their own proposal, participants can coordinate the exchange in a
+group thread for the cycle. Threads refresh every five seconds in the dashboard.
+Only participants who have accepted their proposal can read or send messages.
+Messages are limited to 2,000 characters.
+
+```text
+GET  /messages/cycles/<cycle-id>
+POST /messages/cycles/<cycle-id>  {"message": "Meet at the library at 3 pm?"}
+```
+
 Inspect all proposals using the saved cycle UUID:
 
 ```bash
@@ -253,7 +263,18 @@ Finally, check `GET /items/` and confirm that the transferred items have their n
 
 ## Notification workflow
 
-The backend also includes notification endpoints for swap events. When a cycle is created, participants receive a `swap_proposal` notification. When a swap is completed, they receive a `swap_completed` notification. If a proposal is rejected, the rejection reason is recorded and the related user notification is triggered.
+The backend includes notification endpoints for swap events. Participants receive
+`swap_proposal`, `swap_completed`, and rejection notifications as their cycle
+progresses. When a participant sends a group message, every other participant
+who has accepted receives a `swap_message` notification with the cycle ID. Clicking
+that notification opens the related conversation from the dashboard.
+
+For an existing PostgreSQL database, apply the notification-type constraint update
+once from the project root:
+
+```bash
+psql -d equiswap_dev -f EquiSwap/backend/database_migrate_swap_message_notifications.sql
+```
 
 Relevant endpoints include:
 

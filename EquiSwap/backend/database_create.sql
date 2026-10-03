@@ -64,7 +64,16 @@ CREATE TABLE swap_proposals (
     UNIQUE(cycle_id, giver_id, item_id)
 );
 
--- 6. SWAP HISTORY TABLE
+-- 6. SWAP MESSAGES
+CREATE TABLE swap_messages (
+    message_id SERIAL PRIMARY KEY,
+    cycle_id UUID NOT NULL,
+    sender_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 7. SWAP HISTORY TABLE
 CREATE TABLE swap_history (
     sh_id SERIAL PRIMARY KEY,
     item_id INT NOT NULL REFERENCES items(item_id) ON DELETE CASCADE,
@@ -75,7 +84,7 @@ CREATE TABLE swap_history (
     notes TEXT NULL
 );
 
--- 7. USER PREFERENCES (Blacklist)
+-- 8. USER PREFERENCES (Blacklist)
 CREATE TABLE user_preferences (
     uf_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
@@ -85,7 +94,7 @@ CREATE TABLE user_preferences (
     UNIQUE(user_id, avoid_user_id)
 );
 
--- 8. TRUST LOGS
+-- 9. TRUST LOGS
 CREATE TABLE trust_logs (
     tl_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
@@ -95,11 +104,11 @@ CREATE TABLE trust_logs (
     description TEXT NULL
 );
 
--- 9. NOTIFICATIONS
+-- 10. NOTIFICATIONS
 CREATE TABLE notifications (
     n_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL CHECK (type IN ('swap_proposal', 'swap_response', 'swap_completed', 'swap_expired', 'system')),
+    type VARCHAR(50) NOT NULL CHECK (type IN ('swap_proposal', 'swap_response', 'swap_completed', 'swap_expired', 'swap_message', 'system')),
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW(),
@@ -119,6 +128,7 @@ CREATE INDEX idx_swap_proposals_cycle_id ON swap_proposals(cycle_id);
 CREATE INDEX idx_swap_proposals_giver_id ON swap_proposals(giver_id);
 CREATE INDEX idx_swap_proposals_receiver_id ON swap_proposals(receiver_id);
 CREATE INDEX idx_swap_proposals_status ON swap_proposals(status);
+CREATE INDEX idx_swap_messages_cycle_id ON swap_messages(cycle_id);
 CREATE INDEX idx_swap_history_from_user ON swap_history(from_user_id);
 CREATE INDEX idx_swap_history_to_user ON swap_history(to_user_id);
 CREATE INDEX idx_swap_history_item_id ON swap_history(item_id);

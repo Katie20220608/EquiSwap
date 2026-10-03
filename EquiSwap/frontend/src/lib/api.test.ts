@@ -21,6 +21,7 @@ import {
   listMySwapHistory,
   listMySwapProposals,
   listMyWishlist,
+  listSwapMessages,
   listNotifications,
   listUserDirectory,
   listUsers,
@@ -30,6 +31,7 @@ import {
   registerUser,
   resolveAssetUrl,
   respondToSwapProposal,
+  sendSwapMessage,
   setToken,
   updateItem,
   uploadItemImage,
@@ -65,6 +67,51 @@ describe("api client", () => {
       expect(getToken()).toBe("abc123");
       clearToken();
       expect(getToken()).toBeNull();
+    });
+  });
+
+  describe("swap messages", () => {
+    it("loads messages for a swap cycle", async () => {
+      const messages = [
+        {
+          message_id: 1,
+          cycle_id: "cycle-1",
+          sender_id: 2,
+          sender_name: "Jordan",
+          message: "Meet at 3 pm?",
+          created_at: null,
+        },
+      ];
+      mockFetchOnce(messages);
+
+      await expect(listSwapMessages("cycle-1")).resolves.toEqual(messages);
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/messages/cycles/cycle-1"),
+        expect.objectContaining({ headers: expect.any(Object) }),
+      );
+    });
+
+    it("posts a message to a swap cycle", async () => {
+      const message = {
+        message_id: 2,
+        cycle_id: "cycle-1",
+        sender_id: 1,
+        sender_name: "Mia",
+        message: "That works.",
+        created_at: null,
+      };
+      mockFetchOnce(message);
+
+      await expect(sendSwapMessage("cycle-1", "That works.")).resolves.toEqual(
+        message,
+      );
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/messages/cycles/cycle-1"),
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ message: "That works." }),
+        }),
+      );
     });
   });
 

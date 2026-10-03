@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import {
   ApiError,
@@ -10,9 +10,11 @@ import {
   listMySwapHistory,
   listMySwapProposals,
   listMyWishlist,
+  listSwapMessages,
   listUsers,
   proposeSwap,
   respondToSwapProposal,
+  sendSwapMessage,
 } from "../lib/api";
 import type {
   ApiItem,
@@ -24,6 +26,7 @@ import type {
 import { ItemForm } from "../components/ItemForm";
 import { ItemBrowseCard } from "../components/ItemBrowseCard";
 import { CycleVisualisation } from "../components/CycleVisualisation";
+import { SwapChat } from "../components/SwapChat";
 import { TopNav } from "../components/TopNav";
 import "./Dashboard.css";
 
@@ -31,6 +34,7 @@ type LoadState = "loading" | "ready" | "error";
 
 export function DashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<ApiItem[]>([]);
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [wishlist, setWishlist] = useState<ApiWishlistEntry[]>([]);
@@ -46,6 +50,9 @@ export function DashboardPage() {
   const [isSwappedItemsOpen, setIsSwappedItemsOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [respondingId, setRespondingId] = useState<number | null>(null);
+  const [activeMessageCycleId, setActiveMessageCycleId] = useState<
+    string | null
+  >(null);
   const [proposalError, setProposalError] = useState<string | null>(null);
   const [proposingCycle, setProposingCycle] = useState<string | null>(null);
   const [cycleError, setCycleError] = useState<string | null>(null);
@@ -54,6 +61,16 @@ export function DashboardPage() {
     null,
   );
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const cycleId = searchParams.get("openSwap");
+    if (!user || !cycleId) return;
+
+    setActiveMessageCycleId(cycleId);
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("openSwap");
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [searchParams, setSearchParams, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -213,6 +230,9 @@ export function DashboardPage() {
       setProposals((current) =>
         current.map((p) => (p.sp_id === updated.sp_id ? updated : p)),
       );
+      if (updated.status === "accepted") {
+        setActiveMessageCycleId(updated.cycle_id);
+      }
     } catch (err) {
       setProposalError(
         err instanceof ApiError
@@ -561,12 +581,32 @@ export function DashboardPage() {
                               </button>
                             </>
                           )}
+                          {proposal.giver_id === user.user_id &&
+                            proposal.status === "accepted" && (
+                              <button
+                                type="button"
+                                className="dashboard-toggle"
+                                onClick={() =>
+                                  setActiveMessageCycleId(proposal.cycle_id)
+                                }
+                              >
+                                Message swap group
+                              </button>
+                            )}
                         </span>
                       </li>
                     );
                   })}
                 </ul>
               </div>
+            )}
+            {activeMessageCycleId && (
+              <SwapChat
+                cycleId={activeMessageCycleId}
+                listMessages={listSwapMessages}
+                sendMessage={sendSwapMessage}
+                onClose={() => setActiveMessageCycleId(null)}
+              />
             )}
           </section>
 

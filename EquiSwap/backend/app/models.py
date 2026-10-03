@@ -94,6 +94,18 @@ class SwapProposal(Base):
     item = relationship("Item")
 
 
+class SwapMessage(Base):
+    __tablename__ = "swap_messages"
+
+    message_id = Column(Integer, primary_key=True, index=True)
+    cycle_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    sender_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    sender = relationship("User")
+
+
 class SwapHistory(Base):
     __tablename__ = "swap_history"
 
