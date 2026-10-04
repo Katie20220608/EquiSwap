@@ -31,6 +31,83 @@
   box-shadow: 0 24px 48px -28px rgba(20, 24, 26, 0.28);
 }
 
+.preferences-card h1 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font: 600 clamp(26px, 3vw, 32px)/1.15 var(--display);
+}
+
+.preferences-card .auth-subtitle {
+  max-width: 720px;
+  margin-bottom: 32px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.preferences-form {
+  gap: 22px;
+  margin-bottom: 34px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+
+.preferences-form .auth-field {
+  gap: 8px;
+}
+
+.preferences-list {
+  margin: 0;
+}
+
+.preferences-list h3 {
+  margin: 0 0 14px;
+  color: var(--ink);
+  font: 600 21px/1.25 var(--display);
+}
+
+.preferences-list .trust-history-list {
+  gap: 14px;
+  max-height: 360px;
+}
+
+.preferences-list .trust-history-item {
+  align-items: center;
+  padding: 16px 18px;
+}
+
+.preferences-list .trust-history-details {
+  gap: 5px;
+  line-height: 1.45;
+}
+
+.preferences-list .blacklist-remove-button {
+  padding: 9px 15px;
+}
+
+.preferences-shell {
+  padding-bottom: 56px;
+}
+
+@media (max-width: 640px) {
+  .preferences-shell {
+    padding: 22px 16px 40px;
+  }
+
+  .preferences-card {
+    padding: 28px 22px;
+  }
+
+  .preferences-form {
+    margin-bottom: 26px;
+    padding-bottom: 24px;
+  }
+
+  .preferences-list .trust-history-item {
+    align-items: flex-start;
+    padding: 14px;
+  }
+}
+
 .auth-brand {
   display: flex;
   align-items: center;
@@ -296,6 +373,24 @@
 .blacklist-remove-button:hover {
   color: white;
   background: var(--ink);
+}
+
+.blacklist-remove-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.preference-inline-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.preference-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .trust-history-change {
