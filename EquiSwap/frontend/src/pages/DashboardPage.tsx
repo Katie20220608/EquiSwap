@@ -8,6 +8,7 @@ import {
   deleteWishlistEntry,
   findSwapCycles,
   listItems,
+  listMyPreferences,
   listMySwapHistory,
   listMySwapProposals,
   listMyWishlist,
@@ -20,6 +21,7 @@ import {
 import type {
   AgeGroup,
   ApiItem,
+  ApiPreference,
   ApiSwapHistory,
   ApiSwapProposal,
   ApiUser,
@@ -38,6 +40,7 @@ export function DashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<ApiItem[]>([]);
+  const [preferences, setPreferences] = useState<ApiPreference[]>([]);
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [wishlist, setWishlist] = useState<ApiWishlistEntry[]>([]);
   const [proposals, setProposals] = useState<ApiSwapProposal[]>([]);
@@ -84,6 +87,7 @@ export function DashboardPage() {
 
     Promise.all([
       listItems(),
+      listMyPreferences(),
       listMyWishlist(),
       listMySwapProposals(),
       listMySwapHistory(),
@@ -93,6 +97,7 @@ export function DashboardPage() {
       .then(
         ([
           itemsResult,
+          preferencesResult,
           wishlistResult,
           proposalsResult,
           historyResult,
@@ -101,6 +106,7 @@ export function DashboardPage() {
         ]) => {
           if (cancelled) return;
           setItems(itemsResult);
+          setPreferences(preferencesResult);
           setWishlist(wishlistResult);
           setProposals(proposalsResult);
           setSwapHistory(historyResult);
@@ -152,11 +158,15 @@ export function DashboardPage() {
   );
   const itemsById = new Map(items.map((item) => [item.item_id, item]));
   const namesByUserId = new Map(users.map((u) => [u.user_id, u.name]));
+  const blacklistedUserIds = new Set(
+    preferences.map((entry) => entry.avoid_user_id),
+  );
   const wishlistedItemIds = new Set(wishlist.map((entry) => entry.item_id));
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const browsableItems = items.filter(
     (item) =>
       item.owner_id !== user.user_id &&
+      !blacklistedUserIds.has(item.owner_id) &&
       item.status === "available" &&
       (ageFilter === "" || item.age_group === ageFilter) &&
       (normalizedSearch === "" ||
@@ -398,9 +408,6 @@ export function DashboardPage() {
                         <span className="dashboard-list-actions">
                           <span className="status-pill status-swapped">
                             swapped
-                          </span>
-                          <span className="dashboard-list-meta">
-                            Editing disabled after swap
                           </span>
                         </span>
                       </li>

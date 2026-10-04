@@ -28,6 +28,24 @@ def _cancel_cycle(cycle_id: uuid.UUID, db: Session) -> None:
             p.status = "cancelled"
 
 
+def describe_cycle_for_user(db: Session, cycle_id: uuid.UUID, user_id: int) -> str | None:
+    """Summarise which items a user gives and receives in a cycle, e.g. "gave 'Bike', received 'Toy'"."""
+    proposals = db.query(models.SwapProposal).filter(models.SwapProposal.cycle_id == cycle_id).all()
+    gave = [p.item.name for p in proposals if p.giver_id == user_id and p.item]
+    received = [p.item.name for p in proposals if p.receiver_id == user_id and p.item]
+    parts = []
+    if gave:
+        parts.append("gave " + ", ".join(f"'{name}'" for name in gave))
+    if received:
+        parts.append("received " + ", ".join(f"'{name}'" for name in received))
+    return " and ".join(parts) or None
+
+
+def _describe_outcome(prefix: str, db: Session, cycle_id: uuid.UUID, user_id: int) -> str:
+    details = describe_cycle_for_user(db, cycle_id, user_id)
+    return f"{prefix}: {details}" if details else prefix
+
+
 def _execute_swap(cycle_id: uuid.UUID, proposals: list, db: Session) -> None:
     """Transfer ownership, write history rows, and reward trust for all participants."""
     participant_ids: set[int] = set()
@@ -55,7 +73,7 @@ def _execute_swap(cycle_id: uuid.UUID, proposals: list, db: Session) -> None:
                 user_id=uid,
                 action="completed_swap",
                 score_change=_TRUST_DELTA_COMPLETE,
-                description=f"Completed swap cycle {cycle_id}",
+                description=_describe_outcome("Completed swap", db, cycle_id, uid),
             )
         )
         db.add(
@@ -409,7 +427,7 @@ def respond_to_proposal(
                 user_id=current_user.user_id,
                 action="rejected_swap",
                 score_change=_TRUST_DELTA_REJECT,
-                description=f"Rejected swap cycle {cycle_id}",
+                description=_describe_outcome("Rejected swap", db, cycle_id, current_user.user_id),
             )
         )
 
