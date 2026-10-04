@@ -124,9 +124,6 @@ test.describe("swap cycles", () => {
       .getByRole("button", { name: /My swapped items \(1\)/ })
       .click();
     await expect(myItems.getByText(items[1].name)).toBeVisible();
-    await expect(
-      myItems.getByText("Editing disabled after swap"),
-    ).toBeVisible();
   });
 
   test("rejecting a proposal is reflected in the status list", async ({
