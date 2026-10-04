@@ -370,7 +370,9 @@ describe("DashboardPage", () => {
     expect(
       await screen.findByRole("region", { name: "Swap group messages" }),
     ).toBeInTheDocument();
-    expect(listSwapMessages).toHaveBeenCalledWith("cycle-2");
+    await waitFor(() =>
+      expect(listSwapMessages).toHaveBeenCalledWith("cycle-2"),
+    );
   });
 
   it("rejects a swap proposal and shows an error if the request fails", async () => {

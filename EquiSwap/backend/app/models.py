@@ -51,6 +51,7 @@ class Item(Base):
     description = Column(Text, nullable=True)
     category_id = Column(Integer, ForeignKey("categories.c_id", ondelete="SET NULL"), nullable=True)
     condition_score = Column(Integer, default=5)
+    age_group = Column(String(20), nullable=True)
     status = Column(String(20), default="available")
     image_url = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())

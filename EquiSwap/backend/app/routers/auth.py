@@ -34,6 +34,8 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if user.is_active is False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account suspended")
     token = auth.create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer"}
 

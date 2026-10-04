@@ -53,6 +53,7 @@ export function ItemBrowseCard({
         <h3>{item.name}</h3>
         <p className="item-card-meta">
           Owner: {ownerName} · Condition {item.condition_score}/10
+          {item.age_group && ` · Ages ${item.age_group}`}
         </p>
         {item.description && (
           <p className="item-card-description">{item.description}</p>

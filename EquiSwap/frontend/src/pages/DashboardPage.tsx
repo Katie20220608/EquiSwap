@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import {
+  AGE_GROUPS,
   ApiError,
   deleteItem,
   deleteWishlistEntry,
@@ -17,6 +18,7 @@ import {
   sendSwapMessage,
 } from "../lib/api";
 import type {
+  AgeGroup,
   ApiItem,
   ApiSwapHistory,
   ApiSwapProposal,
@@ -44,6 +46,8 @@ export function DashboardPage() {
   const [cycleItemIds, setCycleItemIds] = useState<
     Record<string, (number | null)[]>
   >({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [ageFilter, setAgeFilter] = useState<AgeGroup | "">("");
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [error, setError] = useState<string | null>(null);
   const [isAddingItem, setIsAddingItem] = useState(false);
@@ -149,9 +153,18 @@ export function DashboardPage() {
   const itemsById = new Map(items.map((item) => [item.item_id, item]));
   const namesByUserId = new Map(users.map((u) => [u.user_id, u.name]));
   const wishlistedItemIds = new Set(wishlist.map((entry) => entry.item_id));
+  const normalizedSearch = searchTerm.trim().toLowerCase();
   const browsableItems = items.filter(
-    (item) => item.owner_id !== user.user_id && item.status === "available",
+    (item) =>
+      item.owner_id !== user.user_id &&
+      item.status === "available" &&
+      (ageFilter === "" || item.age_group === ageFilter) &&
+      (normalizedSearch === "" ||
+        `${item.name} ${item.description ?? ""}`
+          .toLowerCase()
+          .includes(normalizedSearch)),
   );
+  const hasBrowseFilters = searchTerm.trim() !== "" || ageFilter !== "";
 
   function formatSwapDate(swapDate: string | null): string {
     if (!swapDate) return "Date unavailable";
@@ -445,9 +458,46 @@ export function DashboardPage() {
             aria-labelledby="browse-heading"
           >
             <h2 id="browse-heading">Browse items ({browsableItems.length})</h2>
+            <div className="browse-filters" role="search">
+              <input
+                type="search"
+                aria-label="Search items"
+                placeholder="Search by keyword"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+              <select
+                aria-label="Filter by age group"
+                value={ageFilter}
+                onChange={(event) =>
+                  setAgeFilter(event.target.value as AgeGroup | "")
+                }
+              >
+                <option value="">All age groups</option>
+                {AGE_GROUPS.map((group) => (
+                  <option key={group} value={group}>
+                    {group} years
+                  </option>
+                ))}
+              </select>
+              {hasBrowseFilters && (
+                <button
+                  type="button"
+                  className="dashboard-toggle"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setAgeFilter("");
+                  }}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             {browsableItems.length === 0 ? (
               <p className="dashboard-empty">
-                There are no other available items to browse right now.
+                {hasBrowseFilters
+                  ? "No items match your search or filter."
+                  : "There are no other available items to browse right now."}
               </p>
             ) : (
               <div className="browse-items-scroll">

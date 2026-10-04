@@ -1,21 +1,20 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import {
+  AGE_GROUPS,
   ApiError,
   createItem,
   resolveAssetUrl,
   updateItem,
   uploadItemImage,
 } from "../lib/api";
-import type { ApiItem } from "../lib/api";
+import type { AgeGroup, ApiItem } from "../lib/api";
 
 type ItemFormProps = {
   item?: ApiItem;
   onSaved: (item: ApiItem) => void;
   onCancel?: () => void;
 };
-
-const STATUS_OPTIONS = ["available", "swap_pending", "swapped"];
 
 export function ItemForm({ item, onSaved, onCancel }: ItemFormProps) {
   const isEditing = Boolean(item);
@@ -26,7 +25,9 @@ export function ItemForm({ item, onSaved, onCancel }: ItemFormProps) {
   const [conditionScore, setConditionScore] = useState(
     item?.condition_score ?? 5,
   );
-  const [status, setStatus] = useState(item?.status ?? "available");
+  const [ageGroup, setAgeGroup] = useState<AgeGroup | "">(
+    item?.age_group ?? "",
+  );
   const [imageUrl, setImageUrl] = useState(item?.image_url ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +69,7 @@ export function ItemForm({ item, onSaved, onCancel }: ItemFormProps) {
         name: name.trim(),
         description: description.trim() || null,
         condition_score: conditionScore,
-        status,
+        age_group: ageGroup || null,
         image_url: imageUrl.trim() || null,
       };
       const saved =
@@ -81,7 +82,7 @@ export function ItemForm({ item, onSaved, onCancel }: ItemFormProps) {
         setName("");
         setDescription("");
         setConditionScore(5);
-        setStatus("available");
+        setAgeGroup("");
         setImageUrl("");
       }
     } catch (err) {
@@ -130,15 +131,16 @@ export function ItemForm({ item, onSaved, onCancel }: ItemFormProps) {
         </div>
 
         <div className="item-form-field">
-          <label htmlFor={`item-status-${formId}`}>Status</label>
+          <label htmlFor={`item-age-${formId}`}>Age group</label>
           <select
-            id={`item-status-${formId}`}
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
+            id={`item-age-${formId}`}
+            value={ageGroup}
+            onChange={(event) => setAgeGroup(event.target.value as AgeGroup | "")}
           >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option.replace("_", " ")}
+            <option value="">Any / not set</option>
+            {AGE_GROUPS.map((group) => (
+              <option key={group} value={group}>
+                {group} years
               </option>
             ))}
           </select>

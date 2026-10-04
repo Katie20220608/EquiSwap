@@ -56,7 +56,7 @@ describe("ItemForm", () => {
 
     await waitFor(() =>
       expect(createItem).toHaveBeenCalledWith(
-        expect.objectContaining({ name: "Ceramic mug", status: "available" }),
+        expect.objectContaining({ name: "Ceramic mug" }),
       ),
     );
     expect(onSaved).toHaveBeenCalledWith({ ...existingItem, item_id: 2 });

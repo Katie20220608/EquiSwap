@@ -16,6 +16,9 @@ export type AuthToken = {
   token_type: string;
 };
 
+export const AGE_GROUPS = ["0-2", "3-5", "6-8", "9-12", "13+"] as const;
+export type AgeGroup = (typeof AGE_GROUPS)[number];
+
 export type ApiItem = {
   item_id: number;
   owner_id: number;
@@ -23,6 +26,7 @@ export type ApiItem = {
   description: string | null;
   category_id: number | null;
   condition_score: number;
+  age_group?: AgeGroup | null;
   status: string;
   image_url: string | null;
 };
@@ -38,7 +42,7 @@ export type ItemInput = {
   description?: string | null;
   category_id?: number | null;
   condition_score?: number;
-  status?: string;
+  age_group?: AgeGroup | null;
   image_url?: string | null;
 };
 
@@ -107,6 +111,21 @@ export type ApiSwapCycles = {
 
 export type ApiAdminUser = ApiUser & {
   items: ApiItem[];
+};
+
+export type ApiDailyCount = { day: string; count: number };
+
+export type ApiAdminStats = {
+  total_users: number;
+  new_users_7d: number;
+  total_items: number;
+  available_items: number;
+  open_swaps: number;
+  completed_swaps: number;
+  proposal_status_counts: Record<string, number>;
+  signups_per_day: ApiDailyCount[];
+  swaps_per_day: ApiDailyCount[];
+  top_categories: { category: string; items: number; wishlists: number }[];
 };
 
 export type ApiPreference = {
@@ -399,8 +418,76 @@ export function deletePreference(ufId: number): Promise<void> {
   return authedDelete(`/preferences/${ufId}`);
 }
 
-export function listAdminUsers(): Promise<ApiAdminUser[]> {
-  return authedGet<ApiAdminUser[]>("/admin/users");
+export type AdminUserFilters = {
+  q?: string;
+  role?: string;
+  status?: "active" | "suspended";
+};
+
+export function listAdminUsers(
+  filters: AdminUserFilters = {},
+): Promise<ApiAdminUser[]> {
+  const params = new URLSearchParams();
+  if (filters.q) params.set("q", filters.q);
+  if (filters.role) params.set("role", filters.role);
+  if (filters.status) params.set("status", filters.status);
+  const query = params.toString();
+  return authedGet<ApiAdminUser[]>(
+    query ? `/admin/users?${query}` : "/admin/users",
+  );
+}
+
+export type ApiAdminUserDetail = {
+  user: ApiUser;
+  items: ApiItem[];
+  swap_counts: {
+    given: number;
+    received: number;
+    completed: number;
+    rejected: number;
+  };
+  wishlist_count: number;
+  recent_trust_logs: ApiTrustLog[];
+};
+
+export function getAdminUserDetail(
+  userId: number,
+): Promise<ApiAdminUserDetail> {
+  return authedGet<ApiAdminUserDetail>(`/admin/users/${userId}`);
+}
+
+export function setAdminUserStatus(
+  userId: number,
+  isActive: boolean,
+): Promise<ApiUser> {
+  return authedJson<ApiUser>(`/admin/users/${userId}/status`, "PATCH", {
+    is_active: isActive,
+  });
+}
+
+export type ApiAdminSwapInsights = {
+  total_cycles: number;
+  completed_cycles: number;
+  success_rate: number;
+  average_cycle_length: number;
+  average_hours_to_complete: number | null;
+  outcome_counts: Record<string, number>;
+  by_length: {
+    length: number;
+    total: number;
+    completed: number;
+    success_rate: number;
+  }[];
+  top_rejection_reasons: { reason: string; count: number }[];
+  stale_pending_cycles: number;
+};
+
+export function getAdminSwapInsights(): Promise<ApiAdminSwapInsights> {
+  return authedGet<ApiAdminSwapInsights>("/admin/swap-insights");
+}
+
+export function getAdminStats(): Promise<ApiAdminStats> {
+  return authedGet<ApiAdminStats>("/admin/stats");
 }
 
 export function getUserTrustScore(userId: number): Promise<ApiTrustScore> {
