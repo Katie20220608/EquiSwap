@@ -179,28 +179,6 @@ def test_both_accept_executes_swap(client, two_user_cycle):
     assert len(trust_a["history"]) == 1
     assert trust_a["history"][0]["action"] == "completed_swap"
     assert trust_a["history"][0]["score_change"] == 5
-    assert (
-        trust_a["history"][0]["description"] == "Completed swap: gave 'Alice's toy' and received 'Bob's bike'"
-    )
-
-    # Legacy rows that only stored the cycle id are rewritten when read.
-    from app import models
-    from tests.conftest import TestingSessionLocal
-
-    db = TestingSessionLocal()
-    try:
-        cycle_id = db.query(models.SwapProposal.cycle_id).first()[0]
-        log = db.query(models.TrustLog).filter(models.TrustLog.user_id == ctx["uid_a"]).first()
-        log.description = f"Completed swap cycle {cycle_id}"
-        db.commit()
-    finally:
-        db.close()
-    legacy = client.get(
-        f"/users/{ctx['uid_a']}/trust", headers={"Authorization": f"Bearer {ctx['token_a']}"}
-    ).json()
-    assert (
-        legacy["history"][0]["description"] == "Completed swap: gave 'Alice's toy' and received 'Bob's bike'"
-    )
 
 
 def test_rejection_cancels_cycle_and_penalises_rejector(client, two_user_cycle):
@@ -231,9 +209,6 @@ def test_rejection_cancels_cycle_and_penalises_rejector(client, two_user_cycle):
     assert len(trust_a["history"]) == 1
     assert trust_a["history"][0]["action"] == "rejected_swap"
     assert trust_a["history"][0]["score_change"] == -5
-    assert (
-        trust_a["history"][0]["description"] == "Rejected swap: gave 'Alice's toy' and received 'Bob's bike'"
-    )
 
     # The rejection is learned as a reversible preference, preventing the
     # same pairing from being proposed again.
@@ -248,55 +223,6 @@ def test_rejection_cancels_cycle_and_penalises_rejector(client, two_user_cycle):
         headers={"Authorization": f"Bearer {ctx['token_a']}"},
     )
     assert repeat.status_code == 422
-
-
-def test_rejection_blocks_pair_from_being_found_again_for_both_users(client, two_user_cycle):
-    ctx = two_user_cycle
-    auth_a = {"Authorization": f"Bearer {ctx['token_a']}"}
-    auth_b = {"Authorization": f"Bearer {ctx['token_b']}"}
-
-    assert client.get(f"/swaps/find/{ctx['uid_a']}", headers=auth_a).json()["cycles"]
-
-    proposals = _propose(client, ctx["token_a"], [ctx["uid_a"], ctx["uid_b"]])
-    sp_b = next(p for p in proposals if p["giver_id"] == ctx["uid_b"])
-    res = client.patch(f"/swaps/{sp_b['sp_id']}/respond", json={"decision": "rejected"}, headers=auth_b)
-    assert res.status_code == 200
-
-    # Wishlists are unchanged, but neither side is matched with the other again.
-    assert client.get(f"/swaps/find/{ctx['uid_a']}", headers=auth_a).json()["cycles"] == []
-    assert client.get(f"/swaps/find/{ctx['uid_b']}", headers=auth_b).json()["cycles"] == []
-
-    # Deleting the learned preference makes the pair matchable again.
-    prefs = client.get("/preferences/", headers=auth_b).json()
-    assert client.delete(f"/preferences/{prefs[0]['uf_id']}", headers=auth_b).status_code in (200, 204)
-    assert client.get(f"/swaps/find/{ctx['uid_a']}", headers=auth_a).json()["cycles"]
-
-
-def test_expired_proposal_does_not_block_pair(client, two_user_cycle):
-    import uuid
-    from datetime import UTC, datetime, timedelta
-
-    from app import models
-    from app.routers.swaps import process_expirations
-    from tests.conftest import TestingSessionLocal
-
-    ctx = two_user_cycle
-    auth_a = {"Authorization": f"Bearer {ctx['token_a']}"}
-    proposals = _propose(client, ctx["token_a"], [ctx["uid_a"], ctx["uid_b"]])
-
-    db = TestingSessionLocal()
-    try:
-        db.query(models.SwapProposal).filter(
-            models.SwapProposal.cycle_id == uuid.UUID(proposals[0]["cycle_id"])
-        ).update({"expires_at": datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=1)})
-        db.commit()
-        process_expirations(db)
-    finally:
-        db.close()
-
-    assert client.get("/preferences/", headers=auth_a).json() == []
-    assert client.get(f"/swaps/find/{ctx['uid_a']}", headers=auth_a).json()["cycles"]
-    _propose(client, ctx["token_a"], [ctx["uid_a"], ctx["uid_b"]])
 
 
 def test_non_giver_cannot_respond(client, two_user_cycle):

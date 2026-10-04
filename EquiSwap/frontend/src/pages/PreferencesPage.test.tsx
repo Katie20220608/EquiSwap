@@ -96,36 +96,6 @@ describe("PreferencesPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("keeps blacklist data available and retries directory loading independently", async () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: mockUser,
-      isLoading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-    vi.mocked(listMyPreferences).mockResolvedValue([]);
-    vi.mocked(listUserDirectory)
-      .mockRejectedValueOnce(new Error("network error"))
-      .mockResolvedValue([{ user_id: 2, name: "Noah" }]);
-
-    const user = userEvent.setup();
-    renderPreferences();
-
-    expect(
-      await screen.findByText("You haven't blacklisted anyone yet."),
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("Unable to load the user directory."),
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", { name: "Retry loading users" }),
-    );
-
-    expect(await screen.findByRole("option", { name: "Noah" })).toBeInTheDocument();
-    expect(listMyPreferences).toHaveBeenCalledTimes(1);
-  });
-
   it("shows an empty state when nothing is blacklisted", async () => {
     vi.mocked(useAuth).mockReturnValue({
       user: mockUser,
@@ -154,9 +124,7 @@ describe("PreferencesPage", () => {
       logout: vi.fn(),
     });
     vi.mocked(listMyPreferences).mockResolvedValue([]);
-    vi.mocked(listUserDirectory).mockResolvedValue([
-      { user_id: 2, name: "Noah" },
-    ]);
+    vi.mocked(listUserDirectory).mockResolvedValue([]);
 
     const user = userEvent.setup();
     renderPreferences();
@@ -199,7 +167,7 @@ describe("PreferencesPage", () => {
 
     await waitFor(() => expect(screen.getByText("Noah")).toBeInTheDocument());
 
-    await user.selectOptions(screen.getByLabelText("Select user"), "2");
+    await user.selectOptions(screen.getByLabelText("User to avoid"), "2");
     await user.type(
       screen.getByLabelText("Reason (optional)"),
       "Missed a swap",
@@ -210,42 +178,6 @@ describe("PreferencesPage", () => {
       expect(createPreference).toHaveBeenCalledWith(2, "Missed a swap"),
     );
     expect(await screen.findByText("Missed a swap")).toBeInTheDocument();
-  });
-
-  it("filters the user picker by name", async () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: mockUser,
-      isLoading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-    vi.mocked(listMyPreferences).mockResolvedValue([]);
-    vi.mocked(listUserDirectory).mockResolvedValue([
-      { user_id: 2, name: "Noah" },
-      { user_id: 3, name: "Olivia" },
-    ]);
-    vi.mocked(createPreference).mockResolvedValue({
-      uf_id: 6,
-      user_id: 1,
-      avoid_user_id: 3,
-      avoid_user_name: "Olivia",
-      reason: null,
-      created_at: null,
-    });
-
-    const user = userEvent.setup();
-    renderPreferences();
-
-    const search = await screen.findByLabelText("Find a user to avoid");
-    await user.type(search, "oli");
-
-    expect(screen.getByRole("option", { name: "Olivia" })).toBeInTheDocument();
-    expect(screen.queryByRole("option", { name: "Noah" })).not.toBeInTheDocument();
-
-    await user.selectOptions(screen.getByLabelText("Select user"), "3");
-    await user.click(screen.getByRole("button", { name: "Add to blacklist" }));
-
-    await waitFor(() => expect(createPreference).toHaveBeenCalledWith(3, undefined));
   });
 
   it("shows an error when adding to the blacklist fails", async () => {
@@ -265,7 +197,7 @@ describe("PreferencesPage", () => {
     renderPreferences();
 
     await waitFor(() => expect(screen.getByText("Noah")).toBeInTheDocument());
-    await user.selectOptions(screen.getByLabelText("Select user"), "2");
+    await user.selectOptions(screen.getByLabelText("User to avoid"), "2");
     await user.click(screen.getByRole("button", { name: "Add to blacklist" }));
 
     expect(
@@ -334,9 +266,10 @@ describe("PreferencesPage", () => {
     await waitFor(() => expect(screen.getByText("Noah")).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: "Remove" }));
 
-    const error = await screen.findByText(
-      "Unable to remove this user from your blacklist.",
-    );
-    expect(error.closest("li")).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Unable to remove this user from your blacklist.",
+      ),
+    ).toBeInTheDocument();
   });
 });

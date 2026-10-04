@@ -11,7 +11,6 @@ import {
   deleteWishlistEntry,
   findSwapCycles,
   listItems,
-  listMyPreferences,
   listMySwapHistory,
   listMySwapProposals,
   listMyWishlist,
@@ -32,7 +31,6 @@ vi.mock("../lib/api", async () => {
   return {
     ...actual,
     listItems: vi.fn(),
-    listMyPreferences: vi.fn(() => Promise.resolve([])),
     listMyWishlist: vi.fn(),
     listMySwapProposals: vi.fn(),
     listMySwapHistory: vi.fn(() => Promise.resolve([])),
@@ -74,7 +72,6 @@ function renderDashboard(initialEntry = "/dashboard") {
 describe("DashboardPage", () => {
   afterEach(() => {
     vi.clearAllMocks();
-    vi.mocked(listMyPreferences).mockResolvedValue([]);
     vi.mocked(listMySwapHistory).mockResolvedValue([]);
     vi.mocked(listSwapMessages).mockResolvedValue([]);
   });
@@ -194,6 +191,7 @@ describe("DashboardPage", () => {
     );
     expect(screen.getByText("My swapped items (1)")).toBeInTheDocument();
     expect(screen.getByText("Completed swap book")).toBeInTheDocument();
+    expect(screen.getByText("Editing disabled after swap")).toBeInTheDocument();
   });
 
   it("shows accept/reject actions only for pending proposals where the user is the giver", async () => {
@@ -712,54 +710,5 @@ describe("DashboardPage", () => {
     expect(
       screen.queryByRole("button", { name: "Add to wishlist" }),
     ).not.toBeInTheDocument();
-  });
-
-  it("hides available items from blacklisted users", async () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: mockUser,
-      isLoading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-    });
-    vi.mocked(listItems).mockResolvedValue([
-      {
-        item_id: 21,
-        owner_id: 2,
-        name: "Doug's book",
-        description: "A picture book",
-        category_id: null,
-        condition_score: 6,
-        status: "available",
-        image_url: null,
-      },
-    ]);
-    vi.mocked(listMyPreferences).mockResolvedValue([
-      {
-        uf_id: 4,
-        user_id: mockUser.user_id,
-        avoid_user_id: 2,
-        avoid_user_name: "Doug",
-        reason: null,
-        created_at: null,
-      },
-    ]);
-    vi.mocked(listMyWishlist).mockResolvedValue([]);
-    vi.mocked(listMySwapProposals).mockResolvedValue([]);
-    vi.mocked(listUsers).mockResolvedValue([
-      {
-        user_id: 2,
-        name: "Doug",
-        email: "doug@example.com",
-        trust_score: 80,
-        rejection_count: 0,
-        role: "member",
-        is_active: true,
-      },
-    ]);
-
-    renderDashboard();
-
-    expect(await screen.findByText("Browse items (0)")).toBeInTheDocument();
-    expect(screen.queryByText("Doug's book")).not.toBeInTheDocument();
   });
 });

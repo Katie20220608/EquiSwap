@@ -1,14 +1,8 @@
-import re
-import uuid
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app import auth, models, schemas
 from app.database import get_db
-from app.routers.swaps import describe_cycle_for_user
-
-_LEGACY_CYCLE_DESCRIPTION = re.compile(r"^(Completed|Rejected) swap cycle ([0-9a-fA-F-]{36})$")
 
 router = APIRouter()
 
@@ -68,17 +62,11 @@ def get_trust_score(
         .order_by(models.TrustLog.logged_at.desc())
         .all()
     )
-    entries = [schemas.TrustLogRead.model_validate(entry) for entry in history]
-    for entry in entries:
-        match = _LEGACY_CYCLE_DESCRIPTION.match(entry.description or "")
-        if match:
-            details = describe_cycle_for_user(db, uuid.UUID(match.group(2)), user_id)
-            entry.description = f"{match.group(1)} swap: {details}" if details else f"{match.group(1)} swap"
     return schemas.TrustScoreRead(
         user_id=user.user_id,
         trust_score=user.trust_score,
         rejection_count=user.rejection_count,
-        history=entries,
+        history=history,
     )
 
 
