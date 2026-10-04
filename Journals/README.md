@@ -320,3 +320,131 @@ Nope, just need to follow up lecturer to approve my request for Vercel and Rende
 ## Strategy to Resolve
 
 N/A
+
+---
+
+# Week 8: Sept. 14th to Sept. 20th
+
+## Tasks Completed and Time Spent on each Task
+
+| Task                                                                                                                                             | Hours   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| Deploy database and backend to Render and frontend to Vercel, resolve the deployment failure and do manually end-to-end testing and fix the bugs | 8       |
+| Implement preference page (Blacklist management) and update its related tests                                                                    | 2       |
+| Implement preference learning-learning mechanism and test the feature                                                                            | 2       |
+| Implement admin dashboard, notification and refine item and wishlist features                                                                    | 3       |
+| Modify the Frontend UI                                                                                                                           | 4       |
+| Update docs and improve test coverage>90%                                                                                                        | 2       |
+| **Week total**                                                                                                                                   | **21**  |
+| **Cumulative total (incl. prior week's hours)**                                                                                                  | **154** |
+
+---
+
+## Plans / Goals for Next Week
+
+- More performance testing (detection time measurement) and end-to-end deployed app testing, fix the found bugs, refine the UI and features
+- Update more docs, for example, add CI badge to ReadMe
+- Implement CI/CD deployment for GitHub actions
+- More learning about CI/CD and Tech stacks to refine the app
+
+---
+
+## Reflections
+
+### What has gone well?
+
+Most tasks are finished, with progress slightly ahead of plan. Frontend and backend deployments have been successful.
+
+### What has not gone as expected?
+
+Vercel free plan requires a public repository, but COMP693 is currently private. I created a public repo and copied the code there for deployment, which introduces extra work for future frontend deployment.
+
+### Any changes I need to make for next week?
+
+I might need to learn more about how to manage the deployment and do more end-to-end testing for the deployed app.
+
+### Any good practices I should make sure I continue?
+
+Maintain a steady pace to identify and fix issues earlier and prioritize end-to-end testing and early detection of deployment-related problems.
+
+### Anything that is (or might) cause me not to make the progress I expect next week?
+
+Not really.
+
+---
+
+## Project Health
+
+🟢 Green
+
+## Issues Arising
+
+So far all good.
+
+## Strategy to Resolve
+
+## N/A
+
+# Week 9: September 21st to September 27th
+
+## Tasks Completed and Time Spent on each Task
+
+| Task                                                                                    | Hours   |
+| --------------------------------------------------------------------------------------- | ------- |
+| End-to-end and performance testing for the deployed app                                 | 4       |
+| Troubleshoot and fix bugs in the deployed app                                           | 4       |
+| Refine the design and existing features, including the dashboard display and components | 6       |
+| Update docs, learn about CI/CD workflows, and improve the current workflows             | 6       |
+| Learn how to implement automation testing in the application with Playwright            | 4       |
+| **Week total**                                                                          | **24**  |
+| **Cumulative total (incl. prior week's hours)**                                         | **178** |
+
+---
+
+## Plans / Goals for Next Week
+
+- Consider implementing automated testing in the app
+- Continue refining the app and fixing bugs
+- Simulate 20 exchange scenarios for acceptance testing
+- Explore technical opportunities to make the app more mature
+- Refine preference learning to avoid repeated rejections
+
+---
+
+## Reflections
+
+### What has gone well?
+
+Everything went well this week; there were no specific challenges.
+
+### What has not gone as expected?
+
+The CI badge needs Lincoln University approval. I may need to consider another approach or wait for lecturer approval.
+
+### Any changes I need to make for next week?
+
+Do as much testing and refinement as possible, and make the app more user-friendly.
+
+### Any good practices I should make sure I continue?
+
+Continue learning and exploring so I can make the project more mature and bring it closer to industry standards.
+
+### Anything that is (or might) cause me not to make the progress I expect next week?
+
+N/A
+
+---
+
+## Project Health
+
+🟢 Green
+
+## Issues Arising
+
+All good.
+
+## Strategy to Resolve
+
+N/A
+
+---

@@ -23,6 +23,7 @@ It connects to the FastAPI backend at the configured API base URL and uses local
 - TypeScript
 - React Router
 - Vitest + Testing Library
+- Playwright (end-to-end)
 - Oxlint
 
 ## Project structure
@@ -34,6 +35,10 @@ It connects to the FastAPI backend at the configured API base URL and uses local
 - `src/lib/api.ts` — authenticated API client and types
 - `src/lib/AuthContext.tsx` — auth/session state
 - `src/test/setup.ts` — test setup for Vitest
+- `e2e/mocked/` — Playwright specs that mock the API
+- `e2e/integration/` — Playwright specs that run against the real backend
+- `playwright.config.ts`, `playwright.integration.config.ts` — Playwright configs
+- `scripts/run-e2e.sh` — helper to run the E2E suites locally
 
 ## Prerequisites
 
@@ -95,6 +100,75 @@ npm run test:coverage
 
 Current coverage is around 93% statements across `src/`. An HTML report is written
 to `coverage/index.html`.
+
+## End-to-end tests (Playwright)
+
+Two Playwright suites drive a real Chromium browser:
+
+| Suite | Location | Backend | Command |
+| --- | --- | --- | --- |
+| Mocked | `e2e/mocked/` | None: API calls are intercepted with `page.route` | `npm run test:e2e` |
+| Integration | `e2e/integration/` | Real FastAPI app with a throwaway SQLite DB (`backend/e2e.db`) | `npm run test:e2e:integration` |
+
+Integration specs cover registration/login, adding/editing/deleting items, wishlist add/remove, and the swap lifecycle (match discovery, propose, accept, reject, swap history, group chat). `e2e/integration/helpers.ts` seeds users, items, wishlists and swap cycles through the API and signs in by storing the JWT, so each spec uses unique data and the tests need no database reset.
+
+Playwright starts the servers itself, so you do not need to run the dev server or
+backend first. The integration suite uses its own ports (backend `8001`, frontend
+`4174`), so it will not clash with a dev stack on `8000`/`5173`.
+
+### Run locally
+
+One-time setup:
+
+```bash
+cd EquiSwap/frontend
+npm install
+npx playwright install chromium
+
+# Integration suite only: backend dependencies
+cd ../backend
+pip install -r requirements.txt
+```
+
+Run the tests:
+
+```bash
+cd EquiSwap/frontend
+
+# Helper script: installs the browser if needed, then runs the suites
+./scripts/run-e2e.sh              # both suites
+./scripts/run-e2e.sh mocked       # mocked suite only
+./scripts/run-e2e.sh integration  # integration suite only
+
+# Or use npm directly
+npm run test:e2e                  # mocked
+npm run test:e2e:integration      # real backend
+npm run test:e2e:all              # both
+```
+
+The integration suite launches the backend with `python3`. To use another
+interpreter (for example a virtualenv), set `PYTHON`:
+
+```bash
+PYTHON=../backend/.venv/bin/python npm run test:e2e:integration
+```
+
+Useful Playwright options (append after `--`):
+
+```bash
+npm run test:e2e -- --headed          # watch the browser
+npm run test:e2e -- --ui              # interactive UI mode
+npm run test:e2e -- --debug           # step through with the inspector
+npm run test:e2e -- -g "login"        # run tests matching a title
+npx playwright show-report playwright-report/mocked   # open the HTML report (CI mode)
+```
+
+Vitest ignores `e2e/`, so `npm test` only runs the unit tests.
+
+### CI
+
+The `e2e-tests` job in `.github/workflows/ci.yml` runs both suites and uploads the
+`playwright-report/` folder as an artifact. The deploy job waits for it to pass.
 
 ## Run lint
 

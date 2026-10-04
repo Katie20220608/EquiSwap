@@ -436,3 +436,55 @@
     text-align: left;
   }
 }
+
+.browse-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 18px;
+}
+
+.browse-filters input[type="search"],
+.browse-filters select {
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  background-color: #fff;
+  font: 600 14px var(--body);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.browse-filters input[type="search"] {
+  flex: 1 1 260px;
+  padding-left: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23454f52' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 13px center;
+}
+
+.browse-filters select {
+  flex: 0 0 auto;
+  min-width: 170px;
+  cursor: pointer;
+}
+
+.browse-filters input::placeholder {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.browse-filters input:focus,
+.browse-filters select:focus {
+  outline: none;
+  border-color: var(--sea);
+  box-shadow: 0 0 0 3px rgba(42, 102, 104, 0.18);
+}
+
+.browse-filters .dashboard-toggle {
+  height: 42px;
+}

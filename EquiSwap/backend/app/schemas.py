@@ -1,4 +1,6 @@
+from datetime import date as DateType
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -44,12 +46,15 @@ class UserRead(UserBase):
     updated_at: datetime | None = None
 
 
+AgeGroup = Literal["0-2", "3-5", "6-8", "9-12", "13+"]
+
+
 class ItemBase(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     description: str | None = None
     category_id: int | None = None
     condition_score: int = Field(default=5, ge=1, le=10)
-    status: str = Field(default="available")
+    age_group: AgeGroup | None = None
     image_url: str | None = None
 
 
@@ -62,12 +67,14 @@ class ItemUpdate(BaseModel):
     description: str | None = None
     category_id: int | None = None
     condition_score: int | None = Field(default=None, ge=1, le=10)
-    status: str | None = None
+    age_group: AgeGroup | None = None
     image_url: str | None = None
 
 
 class ItemRead(ItemBase):
     model_config = ConfigDict(from_attributes=True)
+
+    status: str
 
     item_id: int
     owner_id: int
@@ -192,3 +199,70 @@ class NotificationRead(BaseModel):
     is_read: bool
     created_at: datetime | None = None
     related_cycle_id: UUID | None = None
+
+
+class DailyCount(BaseModel):
+    day: DateType
+    count: int
+
+
+class CategoryStat(BaseModel):
+    category: str
+    items: int
+    wishlists: int
+
+
+class AdminStatsRead(BaseModel):
+    total_users: int
+    new_users_7d: int
+    total_items: int
+    available_items: int
+    open_swaps: int
+    completed_swaps: int
+    proposal_status_counts: dict[str, int]
+    signups_per_day: list[DailyCount]
+    swaps_per_day: list[DailyCount]
+    top_categories: list[CategoryStat]
+
+
+class AdminUserStatusUpdate(BaseModel):
+    is_active: bool
+
+
+class AdminSwapCounts(BaseModel):
+    given: int
+    received: int
+    completed: int
+    rejected: int
+
+
+class AdminUserDetail(BaseModel):
+    user: UserRead
+    items: list[ItemRead]
+    swap_counts: AdminSwapCounts
+    wishlist_count: int
+    recent_trust_logs: list[TrustLogRead]
+
+
+class CycleLengthStat(BaseModel):
+    length: int
+    total: int
+    completed: int
+    success_rate: float
+
+
+class RejectionReasonStat(BaseModel):
+    reason: str
+    count: int
+
+
+class AdminSwapInsights(BaseModel):
+    total_cycles: int
+    completed_cycles: int
+    success_rate: float
+    average_cycle_length: float
+    average_hours_to_complete: float | None
+    outcome_counts: dict[str, int]
+    by_length: list[CycleLengthStat]
+    top_rejection_reasons: list[RejectionReasonStat]
+    stale_pending_cycles: int

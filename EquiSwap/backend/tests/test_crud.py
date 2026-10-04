@@ -44,9 +44,12 @@ def test_users_items_wishlists_crud_flow(client):
     assert list_items_res.status_code == 200
     assert len(list_items_res.json()) == 1
 
-    update_item_res = client.put(f"/items/{item_id}", json={"status": "swap_pending"}, headers=headers)
+    update_item_res = client.put(
+        f"/items/{item_id}", json={"description": "Updated", "status": "swapped"}, headers=headers
+    )
     assert update_item_res.status_code == 200
-    assert update_item_res.json()["status"] == "swap_pending"
+    assert update_item_res.json()["description"] == "Updated"
+    assert update_item_res.json()["status"] == "available"
 
     create_wishlist_res = client.post("/wishlists/", json={"item_id": item_id}, headers=headers)
     assert create_wishlist_res.status_code == 201

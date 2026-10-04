@@ -101,3 +101,232 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
+.admin-tone-blue { --tone: #3b82f6; --tone-bg: #e8f1ff; }
+.admin-tone-teal { --tone: #14b8a6; --tone-bg: #e0f7f4; }
+.admin-tone-purple { --tone: #8b5cf6; --tone-bg: #f0eaff; }
+.admin-tone-green { --tone: #22c55e; --tone-bg: #e5f8ec; }
+.admin-tone-orange { --tone: #f59e0b; --tone-bg: #fff3dc; }
+.admin-tone-pink { --tone: #ec4899; --tone-bg: #fde8f3; }
+
+.admin-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin: 0 0 28px;
+}
+
+.admin-stat-card {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--tone-bg);
+  border-left: 5px solid var(--tone);
+}
+
+.admin-stat-card dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.admin-stat-card dd {
+  margin: 4px 0 0;
+  font: 700 30px var(--display);
+  color: var(--tone);
+  filter: brightness(0.8);
+}
+
+.admin-chart-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.admin-chart {
+  margin: 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--tone-bg);
+}
+
+.admin-chart figcaption,
+.admin-panel h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.admin-chart-bars {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 170px;
+}
+
+.admin-chart-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  min-width: 0;
+}
+
+.admin-chart-value {
+  font-size: 11px;
+  font-weight: 700;
+  min-height: 14px;
+  color: #374151;
+}
+
+.admin-chart-bar {
+  width: 100%;
+  min-height: 3px;
+  border-radius: 4px 4px 0 0;
+  background: var(--tone);
+}
+
+.admin-chart-day {
+  margin-top: 4px;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.admin-hbar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-hbar-list li {
+  display: grid;
+  grid-template-columns: 80px 1fr 28px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-status-name { text-transform: capitalize; }
+.admin-hbar-track { height: 14px; border-radius: 7px; background: #eef0f2; overflow: hidden; }
+.admin-hbar { display: block; height: 100%; border-radius: 7px; background: var(--tone); }
+
+.admin-status-accepted { --tone: #22c55e; }
+.admin-status-pending { --tone: #f59e0b; }
+.admin-status-cancelled { --tone: #6b7280; }
+.admin-status-expired { --tone: #a78bfa; }
+.admin-status-rejected { --tone: #ef4444; }
+
+.admin-pill {
+  display: inline-block;
+  min-width: 28px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  text-align: center;
+  font-weight: 700;
+  background: var(--tone-bg);
+  color: var(--tone);
+  filter: brightness(0.8);
+}
+
+.admin-category-table {
+  width: 100%;
+  font-size: 13px;
+  border-collapse: collapse;
+}
+
+.admin-category-table th,
+.admin-category-table td {
+  padding: 8px 4px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-category-table th { color: #6b7280; font-weight: 600; }
+
+.admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.admin-filters input,
+.admin-filters select {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+
+.admin-filters input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.admin-user-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.admin-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font: 600 13px inherit;
+  cursor: pointer;
+}
+
+.admin-btn:hover {
+  background: #f3f4f6;
+}
+
+.admin-btn-danger {
+  color: #b91c1c;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.admin-detail {
+  margin-bottom: 18px;
+  padding: 18px 20px;
+  border: 2px solid #3b82f6;
+  border-radius: 10px;
+  background: #f5f9ff;
+}
+
+.admin-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.admin-detail-header h3 {
+  margin: 0;
+}
+
+.admin-reason-list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.admin-reason-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}

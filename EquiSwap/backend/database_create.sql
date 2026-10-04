@@ -33,6 +33,7 @@ CREATE TABLE items (
     description TEXT NULL,
     category_id INT NULL REFERENCES categories(c_id) ON DELETE SET NULL,
     condition_score INT DEFAULT 5 CHECK (condition_score BETWEEN 1 AND 10),
+    age_group VARCHAR(20) NULL CHECK (age_group IN ('0-2', '3-5', '6-8', '9-12', '13+')),
     status VARCHAR(20) DEFAULT 'available' CHECK (status IN ('available', 'swap_pending', 'swapped')),
     image_url TEXT NULL,
     created_at TIMESTAMP DEFAULT NOW(),

@@ -1,5 +1,11 @@
 # EquiSwap
 
+[![CI](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/ci.yml/badge.svg)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/ci.yml)
+[![Backend coverage](https://img.shields.io/badge/backend%20coverage-94.0%25-brightgreen)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/ci.yml)
+[![Frontend coverage](https://img.shields.io/badge/frontend%20coverage-93.4%25-brightgreen)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/ci.yml)
+
+Coverage badges show the latest verified snapshot; the Actions run summary shows the percentages for each run.
+
 EquiSwap is a full-stack application that helps parents exchange children's toys and books without relying on cash-based transactions. Instead of matching one buyer and one seller, the system models user desires as a graph and identifies multi-user barter cycles using Tarjan's Strongly Connected Components algorithm.
 
 ## Project overview
@@ -26,7 +32,21 @@ This creates a coordinated multi-party exchange that would be difficult to organ
 - Backend MVP is implemented in the EquiSwap backend
 - Swap graph logic and Tarjan SCC implementation are in place
 - Core swap workflows and unit tests have been added
-- Frontend remains a future extension and is not yet fully implemented
+- Frontend is implemented and deployed as the live EquiSwap application
+
+## Live application
+
+The live EquiSwap application is available at:
+
+- [https://equi-swap.vercel.app](https://equi-swap.vercel.app)
+
+The application is deployed using the following architecture:
+
+- **Frontend:** React frontend hosted on [Vercel](https://vercel.com/)
+- **Backend:** FastAPI API hosted on [Render](https://render.com/)
+- **Database:** PostgreSQL database hosted on Render and connected to the backend
+
+The frontend communicates with the deployed FastAPI backend on Render for authentication, item and wishlist management, swap cycle detection, notifications, and swap lifecycle operations.
 
 ## Documentation and project files
 
@@ -46,6 +66,21 @@ uvicorn app.main:app --reload
 Then open the Swagger docs at:
 
 - http://127.0.0.1:8000/docs
+
+## Running the tests
+
+```bash
+# Backend unit tests
+cd EquiSwap/backend && pytest -q
+
+# Frontend unit tests
+cd EquiSwap/frontend && npm test
+
+# End-to-end tests (Playwright, mocked API + real backend)
+cd EquiSwap/frontend && ./scripts/run-e2e.sh
+```
+
+See [EquiSwap/frontend/README.MD](EquiSwap/frontend/README.MD#end-to-end-tests-playwright) for details.
 
 ## Repository structure
 

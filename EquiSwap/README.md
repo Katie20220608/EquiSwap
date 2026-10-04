@@ -5,7 +5,7 @@
 - Backend scaffold is implemented in `backend/app`.
 - SQL schema aligned with ERD is in `backend/database_create.sql`.
 - Initial backend tests are in `backend/tests`.
-- Frontend folder exists but is not implemented yet.
+- Frontend Playwright E2E tests are in `frontend/e2e` (run with `frontend/scripts/run-e2e.sh`; see `frontend/README.MD`).
 
 ## Backend quick links
 
