@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../lib/AuthContext";
+import { useAuth } from "../lib/useAuth";
 import { ApiError, changePassword, getUserTrustScore } from "../lib/api";
 import type { ApiTrustLog } from "../lib/api";
 import { TopNav } from "../components/TopNav";
@@ -43,7 +43,6 @@ export function ProfilePage() {
     if (!user) return;
 
     let cancelled = false;
-    setHistoryState("loading");
 
     getUserTrustScore(user.user_id)
       .then((result) => {

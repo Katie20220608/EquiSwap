@@ -1,4 +1,6 @@
+import logging
 import os
+import secrets
 from datetime import UTC, datetime, timedelta
 
 from fastapi import Depends, HTTPException, status
@@ -10,7 +12,35 @@ from sqlalchemy.orm import Session
 from app import models
 from app.database import get_db
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-this-secret-in-production")
+logger = logging.getLogger(__name__)
+
+MIN_SECRET_LENGTH = 32
+INSECURE_SECRETS = {
+    "change-this-secret-in-production",
+    "replace-with-a-strong-secret",
+    "replace-with-a-long-random-production-secret",
+}
+
+
+def _is_production() -> bool:
+    return bool(os.getenv("RENDER")) or os.getenv("ENVIRONMENT", "").lower() == "production"
+
+
+def load_secret_key() -> str:
+    secret = os.getenv("JWT_SECRET_KEY", "")
+    if secret and secret not in INSECURE_SECRETS and len(secret) >= MIN_SECRET_LENGTH:
+        return secret
+    if _is_production():
+        raise RuntimeError(
+            f"JWT_SECRET_KEY must be set to a unique random value of at least {MIN_SECRET_LENGTH} characters."
+        )
+    logger.warning(
+        "JWT_SECRET_KEY is missing or weak; using a random per-process secret (tokens reset on restart)."
+    )
+    return secrets.token_urlsafe(48)
+
+
+SECRET_KEY = load_secret_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 

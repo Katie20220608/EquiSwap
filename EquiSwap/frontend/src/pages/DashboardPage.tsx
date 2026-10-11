@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../lib/AuthContext";
+import { Navigate, useLocation, useSearchParams } from "react-router-dom";
+import { useAuth } from "../lib/useAuth";
 import {
   AGE_GROUPS,
   ApiError,
@@ -39,6 +39,7 @@ type LoadState = "loading" | "ready" | "error";
 export function DashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { hash } = useLocation();
   const [items, setItems] = useState<ApiItem[]>([]);
   const [preferences, setPreferences] = useState<ApiPreference[]>([]);
   const [users, setUsers] = useState<ApiUser[]>([]);
@@ -49,17 +50,16 @@ export function DashboardPage() {
   const [cycleItemIds, setCycleItemIds] = useState<
     Record<string, (number | null)[]>
   >({});
+  const activeMessageCycleId = searchParams.get("openSwap");
   const [searchTerm, setSearchTerm] = useState("");
   const [ageFilter, setAgeFilter] = useState<AgeGroup | "">("");
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [isSwappedItemsOpen, setIsSwappedItemsOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [respondingId, setRespondingId] = useState<number | null>(null);
-  const [activeMessageCycleId, setActiveMessageCycleId] = useState<
-    string | null
-  >(null);
   const [proposalError, setProposalError] = useState<string | null>(null);
   const [proposingCycle, setProposingCycle] = useState<string | null>(null);
   const [cycleError, setCycleError] = useState<string | null>(null);
@@ -69,21 +69,26 @@ export function DashboardPage() {
   );
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const cycleId = searchParams.get("openSwap");
-    if (!user || !cycleId) return;
+  function retryDashboardLoad() {
+    setError(null);
+    setLoadState("loading");
+    setReloadKey((key) => key + 1);
+  }
 
-    setActiveMessageCycleId(cycleId);
+  function setActiveMessageCycleId(cycleId: string | null) {
     const nextSearchParams = new URLSearchParams(searchParams);
-    nextSearchParams.delete("openSwap");
+    if (cycleId) {
+      nextSearchParams.set("openSwap", cycleId);
+    } else {
+      nextSearchParams.delete("openSwap");
+    }
     setSearchParams(nextSearchParams, { replace: true });
-  }, [searchParams, setSearchParams, user]);
+  }
 
   useEffect(() => {
     if (!user) return;
 
     let cancelled = false;
-    setLoadState("loading");
 
     Promise.all([
       listItems(),
@@ -136,7 +141,14 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, reloadKey]);
+
+  useEffect(() => {
+    if (loadState !== "ready" || !hash) return;
+    document
+      .getElementById(decodeURIComponent(hash.slice(1)))
+      ?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  }, [hash, loadState]);
 
   if (authLoading) {
     return (
@@ -300,11 +312,18 @@ export function DashboardPage() {
         heading={`Welcome back, ${user.name}.`}
       />
 
-      {loadState === "loading" && <p>Loading your dashboard...</p>}
+      {loadState === "loading" && (
+        <p role="status">Loading your dashboard...</p>
+      )}
       {loadState === "error" && (
-        <p className="field-error" role="alert">
-          {error}
-        </p>
+        <div>
+          <p className="field-error" role="alert">
+            {error}
+          </p>
+          <button type="button" onClick={retryDashboardLoad}>
+            Try again
+          </button>
+        </div>
       )}
 
       {loadState === "ready" && (
@@ -577,6 +596,7 @@ export function DashboardPage() {
           </section>
 
           <section
+            id="swap-status"
             className="dashboard-panel dashboard-panel-wide"
             aria-labelledby="status-heading"
           >

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../lib/AuthContext";
+import { useAuth } from "../lib/useAuth";
 import {
   ApiError,
   createPreference,
@@ -43,8 +43,6 @@ export function PreferencesPage() {
     if (!user) return;
 
     let cancelled = false;
-    setListState("loading");
-    setListError(null);
 
     listMyPreferences()
       .then((preferenceList) => {
@@ -183,6 +181,12 @@ export function PreferencesPage() {
     setDirectoryReload((current) => current + 1);
   }
 
+  function retryPreferencesLoad() {
+    setListState("loading");
+    setListError(null);
+    setPreferencesReload((current) => current + 1);
+  }
+
   return (
     <main className="profile-shell preferences-shell">
       <TopNav eyebrow="EquiSwap / your account" heading="Preferences" />
@@ -306,9 +310,7 @@ export function PreferencesPage() {
               <button
                 type="button"
                 className="blacklist-remove-button"
-                onClick={() =>
-                  setPreferencesReload((current) => current + 1)
-                }
+                onClick={retryPreferencesLoad}
               >
                 Retry loading blacklist
               </button>

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ApiError,
+  NETWORK_ERROR_MESSAGE,
+  TIMEOUT_ERROR_MESSAGE,
   checkHealth,
   changePassword,
   clearToken,
@@ -58,6 +60,29 @@ describe("api client", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  describe("network failures", () => {
+    it("turns a network failure into a friendly ApiError", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed")));
+      await expect(listItems()).rejects.toMatchObject({
+        status: 0,
+        message: NETWORK_ERROR_MESSAGE,
+      });
+    });
+
+    it("turns an aborted request into a timeout ApiError", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi
+          .fn()
+          .mockRejectedValue(new DOMException("aborted", "AbortError")),
+      );
+      await expect(listItems()).rejects.toMatchObject({
+        status: 0,
+        message: TIMEOUT_ERROR_MESSAGE,
+      });
+    });
   });
 
   describe("token storage", () => {

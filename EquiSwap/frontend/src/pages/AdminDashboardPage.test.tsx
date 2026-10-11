@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminDashboardPage } from "./AdminDashboardPage";
-import { useAuth } from "../lib/AuthContext";
+import { useAuth } from "../lib/useAuth";
 import {
   getAdminStats,
   getAdminSwapInsights,
@@ -11,7 +11,7 @@ import {
   setAdminUserStatus,
 } from "../lib/api";
 
-vi.mock("../lib/AuthContext", () => ({
+vi.mock("../lib/useAuth", () => ({
   useAuth: vi.fn(),
 }));
 

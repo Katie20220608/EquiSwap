@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +11,7 @@
     "test:e2e": "playwright test",
     "test:e2e:all": "./scripts/run-e2e.sh all",
     "test:e2e:integration": "playwright test -c playwright.integration.config.ts",
+    "test:e2e:integration:report": "PLAYWRIGHT_HTML_OUTPUT_DIR=playwright-report/integration playwright test -c playwright.integration.config.ts --reporter=html && playwright show-report playwright-report/integration",
     "test:coverage": "vitest run --coverage",
     "preview": "vite preview"
   },

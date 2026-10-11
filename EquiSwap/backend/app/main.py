@@ -12,6 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine, get_db
+from app.monitoring import release_info, setup_monitoring
 from app.routers import admin, auth, items, messages, notifications, preferences, swaps, users, wishlists
 from app.routers.swaps import process_expirations
 
@@ -62,6 +63,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+setup_monitoring(app)
+
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(items.router, prefix="/items", tags=["items"])
@@ -79,4 +82,4 @@ app.mount("/uploads", StaticFiles(directory=_UPLOAD_DIR), name="uploads")
 @app.get("/health")
 def healthcheck(db: Session = Depends(get_db)) -> dict[str, str]:
     db.execute(text("SELECT 1"))
-    return {"status": "ok"}
+    return {"status": "ok", **release_info()}
