@@ -1,10 +1,8 @@
 # EquiSwap
 
-[![CI](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/ci.yml/badge.svg)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/ci.yml)
-[![Backend coverage](https://img.shields.io/badge/backend%20coverage-94.0%25-brightgreen)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/ci.yml)
-[![Frontend coverage](https://img.shields.io/badge/frontend%20coverage-93.4%25-brightgreen)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/ci.yml)
-
-Coverage badges show the latest verified snapshot; the Actions run summary shows the percentages for each run.
+[![CI](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/deploy%20to%20render.yml/badge.svg)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/deploy-to-render.yml)
+[![Backend coverage](https://img.shields.io/badge/backend%20coverage-95.69%25-brightgreen)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/deploy-to-render.yml)
+[![Frontend coverage](https://img.shields.io/badge/frontend%20coverage-90.35%25-brightgreen)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/deploy-to-render.yml)
 
 EquiSwap is a full-stack application that helps parents exchange children's toys and books without relying on cash-based transactions. Instead of matching one buyer and one seller, the system models user desires as a graph and identifies multi-user barter cycles using Tarjan's Strongly Connected Components algorithm.
 
@@ -25,14 +23,16 @@ This creates a coordinated multi-party exchange that would be difficult to organ
 - Swap cycle detection using graph theory
 - Swap proposal creation, acceptance, rejection, and expiry handling
 - Notifications, trust updates, and swap history tracking
+- User blacklist preferences and account management
+- Admin dashboards for platform and swap-cycle insights
 - FastAPI backend with PostgreSQL/SQLite compatibility
 
 ## Current project status
 
 - Backend MVP is implemented in the EquiSwap backend
 - Swap graph logic and Tarjan SCC implementation are in place
-- Core swap workflows and unit tests have been added
-- Frontend is implemented and deployed as the live EquiSwap application
+- Backend and frontend unit tests, plus mocked and real-backend Playwright E2E suites, are configured in CI
+- Frontend and backend are deployed as the live EquiSwap application
 
 ## Live application
 
@@ -50,6 +50,8 @@ The frontend communicates with the deployed FastAPI backend on Render for authen
 
 ## Documentation and project files
 
+- User guide (GitHub Pages): https://comp693-projects-26s2.github.io/COMP693_26S2_Project_Yue_Li_1165455/ (source in [docs/](docs/))
+- Frontend project guide: [EquiSwap/frontend/README.MD](EquiSwap/frontend/README.MD)
 - Backend project guide: [EquiSwap/backend/README.md](EquiSwap/backend/README.md)
 - Project journal: [Journals/README.md](Journals/README.md)
 - Deliverables: [Deliverables/README.md](Deliverables/README.md)
@@ -57,30 +59,51 @@ The frontend communicates with the deployed FastAPI backend on Render for authen
 
 ## Quick start
 
+Start the backend API:
+
 ```bash
 cd EquiSwap/backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Then open the Swagger docs at:
+Open the Swagger docs at:
 
 - http://127.0.0.1:8000/docs
+
+In another terminal, start the frontend:
+
+```bash
+cd EquiSwap/frontend
+npm install
+npm run dev
+```
+
+The frontend defaults to the backend at `http://localhost:8000`. See the
+[frontend guide](EquiSwap/frontend/README.MD) for environment configuration,
+deployment, and Playwright report instructions.
 
 ## Running the tests
 
 ```bash
 # Backend unit tests
-cd EquiSwap/backend && pytest -q
+(cd EquiSwap/backend && pytest -q)
 
 # Frontend unit tests
-cd EquiSwap/frontend && npm test
+(cd EquiSwap/frontend && npm test)
 
-# End-to-end tests (Playwright, mocked API + real backend)
-cd EquiSwap/frontend && ./scripts/run-e2e.sh
+# Frontend unit tests with coverage (90% statement threshold)
+(cd EquiSwap/frontend && npm run test:coverage)
+
+# Playwright tests: mocked API and real backend integration
+(cd EquiSwap/frontend && ./scripts/run-e2e.sh)
 ```
 
-See [EquiSwap/frontend/README.MD](EquiSwap/frontend/README.MD#end-to-end-tests-playwright) for details.
+The Playwright runner starts its own frontend and, for integration tests, a
+backend using a disposable SQLite database. It requires the frontend npm
+dependencies, Playwright Chromium, and backend dependencies. See the
+[frontend testing guide](EquiSwap/frontend/README.MD#end-to-end-tests-playwright)
+and [backend testing guide](EquiSwap/backend/README.md#run-tests) for details.
 
 ## Repository structure
 
