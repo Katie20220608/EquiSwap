@@ -1,6 +1,7 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AuthProvider, useAuth } from "./AuthContext";
+import { AuthProvider } from "./AuthContext";
+import { useAuth } from "./useAuth";
 import * as api from "./api";
 
 vi.mock("./api", async () => {
@@ -37,6 +38,12 @@ describe("AuthProvider", () => {
   afterEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+  });
+
+  it("throws when useAuth is used outside the provider", () => {
+    expect(() => render(<Consumer />)).toThrow(
+      "useAuth must be used within an AuthProvider",
+    );
   });
 
   it("has no user when there is no stored token", async () => {

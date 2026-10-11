@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../lib/AuthContext";
+import { useAuth } from "../lib/useAuth";
 import {
   getUnreadNotificationCount,
   listNotifications,
@@ -17,16 +17,25 @@ type TopNavProps = {
 export function TopNav({ eyebrow, heading, children }: TopNavProps) {
   const { user, isLoading, logout } = useAuth();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationData, setNotificationData] = useState<{
+    userId: number;
+    notifications: ApiNotification[];
+    unreadCount: number;
+  } | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const notifications =
+    notificationData && notificationData.userId === user?.user_id
+      ? notificationData.notifications
+      : [];
+  const unreadCount =
+    notificationData && notificationData.userId === user?.user_id
+      ? notificationData.unreadCount
+      : 0;
 
   useEffect(() => {
-    if (!user) {
-      setNotifications([]);
-      setUnreadCount(0);
-      return;
-    }
+    const maybeUserId = user?.user_id;
+    if (maybeUserId === undefined) return;
+    const userId: number = maybeUserId;
 
     let cancelled = false;
 
@@ -38,12 +47,18 @@ export function TopNav({ eyebrow, heading, children }: TopNavProps) {
         ]);
 
         if (cancelled) return;
-        setNotifications(items);
-        setUnreadCount(count);
+        setNotificationData({
+          userId,
+          notifications: items,
+          unreadCount: count,
+        });
       } catch {
         if (!cancelled) {
-          setNotifications([]);
-          setUnreadCount(0);
+          setNotificationData({
+            userId,
+            notifications: [],
+            unreadCount: 0,
+          });
         }
       }
     }
@@ -67,10 +82,16 @@ export function TopNav({ eyebrow, heading, children }: TopNavProps) {
 
     try {
       const updated = await markNotificationRead(notification.n_id);
-      setNotifications((current) =>
-        current.map((item) => (item.n_id === updated.n_id ? updated : item)),
-      );
-      setUnreadCount((current) => Math.max(0, current - 1));
+      setNotificationData((current) => {
+        if (!current || current.userId !== notification.user_id) return current;
+        return {
+          ...current,
+          notifications: current.notifications.map((item) =>
+            item.n_id === updated.n_id ? updated : item,
+          ),
+          unreadCount: Math.max(0, current.unreadCount - 1),
+        };
+      });
     } catch {
       // Ignore notification-mark-read errors silently for a lightweight UX.
     }
@@ -83,6 +104,8 @@ export function TopNav({ eyebrow, heading, children }: TopNavProps) {
       navigate(
         `/dashboard?openSwap=${encodeURIComponent(notification.related_cycle_id)}`,
       );
+    } else if (notification.type === "swap_proposal") {
+      navigate("/dashboard#swap-status");
     }
   }
 

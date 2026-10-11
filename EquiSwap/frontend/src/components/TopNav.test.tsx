@@ -3,14 +3,14 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TopNav } from "./TopNav";
-import { useAuth } from "../lib/AuthContext";
+import { useAuth } from "../lib/useAuth";
 import {
   getUnreadNotificationCount,
   listNotifications,
   markNotificationRead,
 } from "../lib/api";
 
-vi.mock("../lib/AuthContext", () => ({
+vi.mock("../lib/useAuth", () => ({
   useAuth: vi.fn(),
 }));
 
@@ -43,6 +43,7 @@ function CurrentLocation() {
     <output data-testid="current-location">
       {location.pathname}
       {location.search}
+      {location.hash}
     </output>
   );
 }
@@ -242,6 +243,41 @@ describe("TopNav", () => {
       "/dashboard?openSwap=cycle-2",
     );
     await waitFor(() => expect(markNotificationRead).toHaveBeenCalledWith(2));
+  });
+
+  it("opens the swap status section from a swap proposal notification", async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: memberUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    const notification = {
+      n_id: 3,
+      user_id: 1,
+      type: "swap_proposal",
+      message: "You have been matched in a swap cycle.",
+      is_read: false,
+      related_cycle_id: "cycle-3",
+    };
+    vi.mocked(listNotifications).mockResolvedValue([notification]);
+    vi.mocked(getUnreadNotificationCount).mockResolvedValue(1);
+    vi.mocked(markNotificationRead).mockResolvedValue({
+      ...notification,
+      is_read: true,
+    });
+
+    const user = userEvent.setup();
+    renderTopNav();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Notifications" }),
+    );
+    await user.click(screen.getByText("You have been matched in a swap cycle."));
+
+    expect(await screen.findByTestId("current-location")).toHaveTextContent(
+      "/dashboard#swap-status",
+    );
   });
 
   it("resets notifications when the request fails", async () => {

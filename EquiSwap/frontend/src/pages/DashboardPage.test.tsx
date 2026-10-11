@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "./DashboardPage";
-import { useAuth } from "../lib/AuthContext";
+import { useAuth } from "../lib/useAuth";
 import {
   createItem,
   createWishlistEntry,
@@ -22,7 +22,7 @@ import {
   updateItem,
 } from "../lib/api";
 
-vi.mock("../lib/AuthContext", () => ({
+vi.mock("../lib/useAuth", () => ({
   useAuth: vi.fn(),
 }));
 
@@ -483,6 +483,36 @@ describe("DashboardPage", () => {
       await screen.findByText(
         "Unable to load your dashboard. Please try again.",
       ),
+    ).toBeInTheDocument();
+  });
+
+  it("retries loading the dashboard after a failure", async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: mockUser,
+      isLoading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    vi.mocked(listItems)
+      .mockRejectedValueOnce(new Error("network error"))
+      .mockResolvedValue([]);
+    vi.mocked(listMyPreferences).mockResolvedValue([]);
+    vi.mocked(listMyWishlist).mockResolvedValue([]);
+    vi.mocked(listMySwapProposals).mockResolvedValue([]);
+    vi.mocked(listMySwapHistory).mockResolvedValue([]);
+    vi.mocked(listUsers).mockResolvedValue([]);
+    vi.mocked(findSwapCycles).mockResolvedValue({
+      user_id: mockUser.user_id,
+      cycles: [],
+    });
+
+    renderDashboard();
+
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Try again" }));
+
+    expect(
+      await screen.findByText("Potential swap matches (0)"),
     ).toBeInTheDocument();
   });
 

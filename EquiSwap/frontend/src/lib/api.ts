@@ -153,6 +153,31 @@ export class ApiError extends Error {
   }
 }
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
+export const NETWORK_ERROR_MESSAGE =
+  "We couldn't reach the server. Check your connection and try again.";
+export const TIMEOUT_ERROR_MESSAGE =
+  "The server is taking too long to respond. It may be waking up, so please try again in a moment.";
+
+async function apiFetch(
+  input: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { signal: controller.signal, ...init });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError(TIMEOUT_ERROR_MESSAGE, 0);
+    }
+    throw new ApiError(NETWORK_ERROR_MESSAGE, 0);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function parseErrorDetail(response: Response): Promise<string> {
   try {
     const body = await response.json();
@@ -182,7 +207,7 @@ export async function registerUser(input: {
   email: string;
   password: string;
 }): Promise<ApiUser> {
-  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+  const response = await apiFetch(`${API_BASE_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
@@ -204,7 +229,7 @@ export async function loginUser(input: {
     password: input.password,
   });
 
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const response = await apiFetch(`${API_BASE_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
@@ -221,7 +246,7 @@ export async function loginUser(input: {
 
 export async function fetchCurrentUser(): Promise<ApiUser> {
   const token = getToken();
-  const response = await fetch(`${API_BASE_URL}/auth/me`, {
+  const response = await apiFetch(`${API_BASE_URL}/auth/me`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
@@ -236,7 +261,7 @@ export async function changePassword(input: {
   currentPassword: string;
   newPassword: string;
 }): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/auth/password`, {
+  const response = await apiFetch(`${API_BASE_URL}/auth/password`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -255,7 +280,7 @@ export async function changePassword(input: {
 
 export async function checkHealth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/health`);
+    const response = await apiFetch(`${API_BASE_URL}/health`);
     return response.ok;
   } catch {
     return false;
@@ -268,7 +293,7 @@ function authHeaders(): HeadersInit {
 }
 
 async function authedGet<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await apiFetch(`${API_BASE_URL}${path}`, {
     headers: authHeaders(),
   });
 
@@ -284,7 +309,7 @@ async function authedJson<T>(
   method: "POST" | "PUT" | "PATCH",
   body: unknown,
 ): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await apiFetch(`${API_BASE_URL}${path}`, {
     method,
     headers: {
       "Content-Type": "application/json",
@@ -301,7 +326,7 @@ async function authedJson<T>(
 }
 
 async function authedDelete(path: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await apiFetch(`${API_BASE_URL}${path}`, {
     method: "DELETE",
     headers: authHeaders(),
   });
@@ -343,7 +368,7 @@ export function getUnreadNotificationCount(): Promise<number> {
 export async function markNotificationRead(
   notificationId: number,
 ): Promise<ApiNotification> {
-  const response = await fetch(
+  const response = await apiFetch(
     `${API_BASE_URL}/notifications/${notificationId}/read`,
     {
       method: "PATCH",
@@ -523,7 +548,7 @@ export async function uploadItemImage(file: File): Promise<{ url: string }> {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${API_BASE_URL}/items/upload-image`, {
+  const response = await apiFetch(`${API_BASE_URL}/items/upload-image`, {
     method: "POST",
     headers: authHeaders(),
     body: formData,

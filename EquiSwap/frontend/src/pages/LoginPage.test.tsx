@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LoginPage } from "./LoginPage";
 import { ApiError } from "../lib/api";
-import { useAuth } from "../lib/AuthContext";
+import { useAuth } from "../lib/useAuth";
 
 const navigateMock = vi.fn();
 
@@ -16,7 +16,7 @@ vi.mock("react-router-dom", async () => {
   return { ...actual, useNavigate: () => navigateMock };
 });
 
-vi.mock("../lib/AuthContext", () => ({
+vi.mock("../lib/useAuth", () => ({
   useAuth: vi.fn(),
 }));
 

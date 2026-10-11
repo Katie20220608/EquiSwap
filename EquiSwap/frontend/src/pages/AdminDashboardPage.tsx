@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../lib/AuthContext";
+import { useAuth } from "../lib/useAuth";
 import {
   ApiError,
   getAdminStats,
@@ -338,7 +338,6 @@ export function AdminDashboardPage() {
     if (!isAdmin) return;
 
     let cancelled = false;
-    setLoadState("loading");
 
     Promise.all([getAdminStats(), getAdminSwapInsights()])
       .then(([statsResult, insightsResult]) => {

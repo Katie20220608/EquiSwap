@@ -42,9 +42,10 @@ It connects to the FastAPI backend at the configured API base URL and uses local
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 22 (the version used in CI)
 - npm
-- The backend API running locally on `http://localhost:8000`
+- For normal local app development: the backend API running at `http://localhost:8000`
+- For Playwright integration tests: Python and the backend dependencies (the tests start their own backend)
 
 ## Install
 
@@ -92,25 +93,34 @@ npm test
 ## Test coverage
 
 Coverage is measured with `@vitest/coverage-v8` and configured in `vitest.config.ts`
-with an 80% statement threshold (branch coverage is not enforced):
+with a 90% statement threshold (branch coverage is not enforced):
 
 ```bash
 npm run test:coverage
 ```
 
-Current coverage is around 93% statements across `src/`. An HTML report is written
-to `coverage/index.html`.
+The command prints the current coverage summary and writes an HTML report to
+`coverage/index.html`.
 
 ## End-to-end tests (Playwright)
 
 Two Playwright suites drive a real Chromium browser:
 
-| Suite | Location | Backend | Command |
-| --- | --- | --- | --- |
-| Mocked | `e2e/mocked/` | None: API calls are intercepted with `page.route` | `npm run test:e2e` |
+| Suite       | Location           | Backend                                                        | Command                        |
+| ----------- | ------------------ | -------------------------------------------------------------- | ------------------------------ |
+| Mocked      | `e2e/mocked/`      | None: API calls are intercepted with `page.route`              | `npm run test:e2e`             |
 | Integration | `e2e/integration/` | Real FastAPI app with a throwaway SQLite DB (`backend/e2e.db`) | `npm run test:e2e:integration` |
 
-Integration specs cover registration/login, adding/editing/deleting items, wishlist add/remove, and the swap lifecycle (match discovery, propose, accept, reject, swap history, group chat). `e2e/integration/helpers.ts` seeds users, items, wishlists and swap cycles through the API and signs in by storing the JWT, so each spec uses unique data and the tests need no database reset.
+The mocked suite covers landing-page navigation and login/registration validation, API errors, and session persistence/logout. The integration suite covers registration/login, adding/editing/deleting items, wishlist add/remove, swap discovery and lifecycle (propose, accept, reject, history, group chat), blacklist management, and password changes. `e2e/integration/helpers.ts` seeds users, items, wishlists and swap cycles through the API and signs in by storing the JWT, so tests use unique data without needing a reset between runs.
+
+The integration suite stores its disposable SQLite database at
+`../backend/e2e.db` (relative to this directory). If backend schema changes make
+that existing database stale, remove the disposable file before rerunning so the
+backend can recreate it:
+
+```bash
+rm ../backend/e2e.db
+```
 
 Playwright starts the servers itself, so you do not need to run the dev server or
 backend first. The integration suite uses its own ports (backend `8001`, frontend
@@ -146,6 +156,27 @@ npm run test:e2e:integration      # real backend
 npm run test:e2e:all              # both
 ```
 
+### View the Playwright HTML report locally
+
+Run either suite with the HTML reporter, then open the generated report in your
+browser:
+
+```bash
+# Integration suite (starts the backend and frontend)
+PLAYWRIGHT_HTML_OUTPUT_DIR=playwright-report/integration \
+npx playwright test -c playwright.integration.config.ts --reporter=html
+npx playwright show-report playwright-report/integration
+
+# Mocked suite
+PLAYWRIGHT_HTML_OUTPUT_DIR=playwright-report/mocked \
+npx playwright test --reporter=html
+npx playwright show-report playwright-report/mocked
+```
+
+The report includes test results and any available traces, screenshots, or
+attachments. In CI, Playwright generates both HTML reports under
+`playwright-report/`; the workflow uploads that directory as an artifact.
+
 The integration suite launches the backend with `python3`. To use another
 interpreter (for example a virtualenv), set `PYTHON`:
 
@@ -167,8 +198,10 @@ Vitest ignores `e2e/`, so `npm test` only runs the unit tests.
 
 ### CI
 
-The `e2e-tests` job in `.github/workflows/ci.yml` runs both suites and uploads the
-`playwright-report/` folder as an artifact. The deploy job waits for it to pass.
+The `e2e-tests` job in the repository-root
+`.github/workflows/deploy to render.yml` workflow runs both suites and uploads
+the `playwright-report/` folder as an artifact. The deploy job waits for it to
+pass.
 
 ## Run lint
 

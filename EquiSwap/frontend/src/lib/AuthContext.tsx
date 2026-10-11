@@ -1,61 +1,68 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type { ReactNode } from "react";
 import type { ApiUser } from "./api";
 import { clearToken, fetchCurrentUser, getToken, loginUser } from "./api";
-
-type AuthContextValue = {
-  user: ApiUser | null;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-};
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import { AuthContext } from "./auth-context";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<ApiUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userState, setUserState] = useState<ApiUser | null | undefined>(() =>
+    getToken() ? undefined : null,
+  );
+  const authGeneration = useRef(0);
+  const user = userState ?? null;
+  const isLoading = userState === undefined;
 
-  const loadUser = useCallback(async () => {
+  const loadUser = useCallback(async (): Promise<ApiUser | null> => {
     if (!getToken()) {
-      setUser(null);
-      setIsLoading(false);
-      return;
+      return null;
     }
     try {
-      const currentUser = await fetchCurrentUser();
-      setUser(currentUser);
+      return await fetchCurrentUser();
     } catch {
       // Stored token is missing, expired, or invalid.
       clearToken();
-      setUser(null);
-    } finally {
-      setIsLoading(false);
+      return null;
     }
   }, []);
 
   useEffect(() => {
-    loadUser();
+    if (!getToken()) return;
+
+    let cancelled = false;
+    const generation = ++authGeneration.current;
+    void loadUser().then((currentUser) => {
+      if (!cancelled && generation === authGeneration.current) {
+        setUserState(currentUser);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [loadUser]);
 
   const login = useCallback(
     async (email: string, password: string) => {
       await loginUser({ email, password });
-      await loadUser();
+      const generation = ++authGeneration.current;
+      const currentUser = await loadUser();
+      if (generation === authGeneration.current) {
+        setUserState(currentUser);
+      }
     },
     [loadUser],
   );
 
   const logout = useCallback(() => {
+    authGeneration.current += 1;
     clearToken();
-    setUser(null);
+    setUserState(null);
   }, []);
 
   const value = useMemo(
@@ -64,12 +71,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 }

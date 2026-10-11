@@ -97,7 +97,8 @@ drops below 80%.
 pytest -q
 ```
 
-Current coverage is around 94% statements across `app/`. To generate an HTML report:
+The configured local minimum is 80% statement coverage. GitHub Actions enforces
+a 90% minimum for this job. To generate an HTML report:
 
 ```bash
 pytest --cov=app --cov-report=html
@@ -315,7 +316,7 @@ psql -d equiswap_dev -f EquiSwap/backend/database_create.sql
 3. Seed dummy data:
 
 ```bash
-psql -d equiswap_dev -f EquiSwap/database.populate.sql
+psql -d equiswap_dev -f EquiSwap/backend/database.populate.sql
 ```
 
 4. Point API to Postgres:
@@ -342,14 +343,22 @@ psql -U postgres -d equiswap_dev -h localhost
 Optional variables:
 
 - `DATABASE_URL` (default: `sqlite:///./equiswap.db`)
-- `JWT_SECRET_KEY` (set this in real deployments)
+- `JWT_SECRET_KEY` (required in production, at least 32 random characters, e.g. `python -c "import secrets; print(secrets.token_urlsafe(48))"`; the app refuses to start on Render/`ENVIRONMENT=production` with a missing, weak or placeholder value. Elsewhere a random per-process secret is used)
 - `ACCESS_TOKEN_EXPIRE_MINUTES` (default: `60`)
+
+### Monitoring and release checks
+
+- Every response carries an `X-Request-ID` header, and each request is logged with method, path, status and duration (slow or 5xx requests log as warnings; unhandled errors return the request ID).
+- `GET /health` returns `status`, `version` (the deployed git commit, from `RENDER_GIT_COMMIT` or `APP_VERSION`) and `environment`.
+- The frontend reports uncaught errors to `POST /client-errors`, which writes them to the backend log.
+- After deploying, CI waits until `/health` reports the pushed commit SHA, so a crashed or stale deploy fails the pipeline. CI also lints, builds and audits the frontend.
 
 ### Connect Render deployment to GitHub Actions
 
-The `deploy-backend` job in `.github/workflows/ci.yml` runs after the backend and
-frontend tests, and only deploys pushes to `main`. It triggers Render and waits
-for the live health endpoint before completing.
+The `deploy-backend` job in the repository-root
+`.github/workflows/deploy to render.yml` workflow runs after the backend,
+frontend, and Playwright tests, and only deploys pushes to `main`. It triggers
+Render and waits for the live health endpoint before completing.
 
 Add these GitHub repository secrets under **Settings > Secrets and variables >
 Actions**:

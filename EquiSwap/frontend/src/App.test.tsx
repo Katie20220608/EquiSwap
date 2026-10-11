@@ -3,7 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import App from "./App";
 
-vi.mock("./lib/AuthContext", () => ({
+vi.mock("./lib/useAuth", () => ({
   useAuth: () => ({
     user: null,
     isLoading: false,
