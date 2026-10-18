@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EquiSwap – User Guide</title>
+  <style>
+    :root { --ink:#1b1f24; --muted:#59636e; --accent:#c2410c; --bg:#faf8f3; --card:#fff; --line:#e4e0d6; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:var(--ink); background:var(--bg); }
+    header { background:#0f172a; color:#fff; padding:56px 24px; text-align:center; }
+    header h1 { margin:0 0 8px; font-size:2.4rem; }
+    header p { margin:0 auto; max-width:640px; color:#cbd5e1; }
+    .btn { display:inline-block; margin-top:20px; padding:10px 20px; border-radius:6px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; }
+    .btn.alt { background:transparent; border:1px solid #64748b; margin-left:8px; }
+    nav { position:sticky; top:0; background:#fff; border-bottom:1px solid var(--line); text-align:center; padding:10px; z-index:1; }
+    nav a { margin:0 10px; color:var(--ink); text-decoration:none; font-size:.92rem; }
+    nav a:hover { color:var(--accent); }
+    main { max-width:860px; margin:0 auto; padding:24px; }
+    section { margin:40px 0; }
+    h2 { border-bottom:2px solid var(--line); padding-bottom:6px; }
+    .step { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px; margin:24px 0; }
+    .step h3 { margin-top:0; }
+    .step h3 span { display:inline-block; width:28px; height:28px; line-height:28px; text-align:center; border-radius:50%; background:var(--accent); color:#fff; font-size:.9rem; margin-right:8px; }
+    img { max-width:100%; border:1px solid var(--line); border-radius:8px; margin-top:8px; }
+    figcaption { color:var(--muted); font-size:.88rem; }
+    figure { margin:12px 0 0; }
+    code { background:#efece4; padding:1px 5px; border-radius:4px; }
+    pre { background:#0f172a; color:#e2e8f0; padding:14px; border-radius:8px; overflow:auto; }
+    .note { background:#fff7ed; border-left:4px solid var(--accent); padding:10px 14px; border-radius:4px; }
+    footer { text-align:center; color:var(--muted); padding:32px; font-size:.9rem; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>EquiSwap</h1>
+  <p>Swap children's toys and books with other parents – no cash, no direct one-to-one match required.</p>
+  <a class="btn" href="https://equi-swap.vercel.app">Open the live app</a>
+  <a class="btn alt" href="https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455">GitHub repository</a>
+</header>
+<nav>
+  <a href="#about">About</a>
+  <a href="#tarjan">Tarjan's algorithm</a>
+  <a href="#guide">How to use</a>
+  <a href="#run">Run locally</a>
+</nav>
+<main>
+
+<section id="about">
+  <h2>What is EquiSwap?</h2>
+  <p>Children outgrow toys and books quickly. Swapping is a great way to pass them on, but it rarely works as a simple
+  two-person trade: what you want is seldom held by someone who wants what you have. This is the problem of
+  <em>barter illiquidity</em>.</p>
+  <p>EquiSwap lets each parent list the items they can give and a wishlist of items they would like. The system turns
+  everyone's wishes into a graph and automatically finds <strong>multi-party swap cycles</strong>, for example:</p>
+  <ul>
+    <li>Alice wants Ben's item,</li>
+    <li>Ben wants Chloe's item,</li>
+    <li>Chloe wants Alice's item.</li>
+  </ul>
+  <p>Nobody can trade directly with anyone, yet all three can be satisfied at once. EquiSwap proposes the cycle, and
+  the swap goes ahead only when every participant accepts.</p>
+</section>
+
+<section id="tarjan">
+  <h2>How it works: Tarjan's algorithm</h2>
+  <p>EquiSwap models the community as a <strong>directed graph</strong>: each user is a node, and an edge
+  <code>A → B</code> means "A wants an item that B owns".</p>
+  <p>A valid swap group is a set of users who can all reach each other by following edges, that is, a
+  <strong>strongly connected component (SCC)</strong>. <strong>Tarjan's algorithm</strong> finds every SCC in a single
+  depth-first traversal:</p>
+  <ol>
+    <li>Walk the graph depth-first, giving each node an <em>index</em> (visit order) and a <em>low-link</em>
+        (the smallest index reachable from it).</li>
+    <li>Push each visited node on a stack.</li>
+    <li>When a node's low-link equals its own index, it is the root of an SCC, so pop the stack down to that node.
+        Those nodes form one component.</li>
+    <li>Components with two or more users are valid swap cycles and are offered as potential matches.</li>
+  </ol>
+  <p>It runs in <code>O(V + E)</code> time, so it scales well as more parents and wishes are added.</p>
+</section>
+
+<section id="guide">
+  <h2>How to use the application</h2>
+  <p class="note">The screenshots below follow a demo scenario with three parents: Alice owns a Wooden Train Set,
+  Ben owns a Picture Book Bundle, and Chloe owns Building Blocks. Each wishes for the next person's item.</p>
+
+  <div class="step">
+    <h3><span>1</span>Create an account</h3>
+    <p>Open the app and choose <strong>Register</strong>. Enter your name, email and a password, then press
+    <em>Create account</em>.</p>
+    <figure><img src="images/01-register.png" alt="Register page"><figcaption>Registration form</figcaption></figure>
+  </div>
+
+  <div class="step">
+    <h3><span>2</span>Log in</h3>
+    <p>Sign in with your email and password. You will be taken to your dashboard.</p>
+    <figure><img src="images/02-login.png" alt="Login page"><figcaption>Login form</figcaption></figure>
+  </div>
+
+  <div class="step">
+    <h3><span>3</span>Explore the dashboard</h3>
+    <p>The dashboard brings everything together: your items, your wishlist, a browsable list of other parents' items,
+    potential swap matches, swap status and swap history.</p>
+    <figure><img src="images/03-dashboard.png" alt="Dashboard overview"><figcaption>Dashboard overview</figcaption></figure>
+  </div>
+
+  <div class="step">
+    <h3><span>4</span>List the items you can give</h3>
+    <p>In <strong>My items</strong>, press <em>+ Add item</em> to describe a toy or book (name, condition, optional picture).
+    You can edit or delete items at any time.</p>
+    <figure><img src="images/04-my-items.png" alt="My items panel"><figcaption>My items</figcaption></figure>
+  </div>
+
+  <div class="step">
+    <h3><span>5</span>Build your wishlist</h3>
+    <p>Use <strong>Browse items</strong> to search by keyword or age group, then press <em>Add to wishlist</em> on the items
+    you would like. Your wishlist is what creates the edges in the swap graph.</p>
+  </div>
+
+  <div class="step">
+    <h3><span>6</span>Review potential swap matches</h3>
+    <p>Whenever the wishlists form a cycle, <strong>Potential swap matches</strong> shows it as a diagram. Each arrow
+    points from the person giving an item to the person receiving it. Press <em>Propose swap</em> to start it.</p>
+    <figure><img src="images/05-matches.png" alt="Swap cycle visualisation"><figcaption>A three-person swap cycle found by Tarjan's algorithm</figcaption></figure>
+  </div>
+
+  <div class="step">
+    <h3><span>7</span>Accept or reject the proposal</h3>
+    <p>Every participant sees the proposal in <strong>Swap status</strong> and can <em>Accept</em> or <em>Reject</em> it.
+    The swap only completes if everyone accepts; proposals that are not answered in time expire.</p>
+    <figure><img src="images/06-status.png" alt="Swap status panel"><figcaption>Pending proposals</figcaption></figure>
+  </div>
+
+  <div class="step">
+    <h3><span>8</span>Coordinate with the group</h3>
+    <p>After you accept, a group chat opens so participants can arrange a time and place to hand over the items.
+    You also receive notifications from the bell icon.</p>
+    <figure><img src="images/07-accepted-chat.png" alt="Accepted swap with group chat"><figcaption>Accepted swap and swap group messages</figcaption></figure>
+  </div>
+
+  <div class="step">
+    <h3><span>9</span>Complete the swap and check history</h3>
+    <p>Once all participants accept, ownership of the items changes hands automatically, your trust score is updated, and
+    the exchange appears in <strong>Swap history</strong>. Items you received are listed under <em>My swapped items</em>.</p>
+    <figure><img src="images/08-history.png" alt="Swap history panel"><figcaption>Completed swap history</figcaption></figure>
+  </div>
+</section>
+
+<section id="run">
+  <h2>Run it locally</h2>
+<pre>cd EquiSwap/backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+
+# in another terminal
+cd EquiSwap/frontend
+npm ci
+npm run dev</pre>
+  <p>The API documentation is available at <code>http://127.0.0.1:8000/docs</code>.</p>
+</section>
+
+</main>
+<footer>EquiSwap – COMP693 project by Yue Li</footer>
+</body>
+</html>
