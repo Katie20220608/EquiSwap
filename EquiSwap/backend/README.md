@@ -16,6 +16,11 @@ The backend has progressed through the main implementation milestones and now in
 - Task 2.4: 16 pytest unit tests for Tarjan's algorithm across varied mock graphs
 - Task 2.5: Swap proposal creation, acceptance/rejection, automatic execution, and history and validated with unit tests
 - Task 3.1: User preferences (blacklist management) — block specific users from ever appearing in a proposed swap cycle
+- Admin endpoints: user management, platform statistics, and swap insights
+- Cycle group chat for participants who accepted a proposal, with `swap_message` notifications
+- Item age groups (`0-2`, `3-5`, `6-8`, `9-12`, `13+`)
+- Proposal expiry: a background sweep every 5 minutes expires overdue proposals and warns about ones expiring soon
+- Request IDs, request logging, `/health` release metadata, and `/client-errors` frontend error reporting
 
 ## Project structure
 
@@ -30,12 +35,19 @@ The backend has progressed through the main implementation milestones and now in
 - `app/routers/swaps.py`: Cycle discovery, proposal, response, execution, and history endpoints
 - `app/routers/preferences.py`: Blacklist management endpoints (create/list/delete avoided users)
 - `app/routers/notifications.py`: Notification list/read endpoints
+- `app/routers/messages.py`: Group chat for accepted swap cycles
+- `app/routers/admin.py`: Admin user management, statistics, and swap insights
+- `app/monitoring.py`: Request ID/logging middleware and `/client-errors`
 - `app/tarjan.py`: Tarjan's SCC algorithm implementation
 - `app/graph.py`: Builds swap graph adjacency list from DB
 - `tests/test_crud.py`: CRUD integration-style unit test
 - `tests/test_swaps.py`: Swap proposal, response, rejection, and execution tests
 - `tests/test_tarjan.py`: 16 unit tests for Tarjan's algorithm
 - `tests/test_preferences.py`: Blacklist CRUD tests and swap-cycle exclusion tests
+- `tests/test_messages.py`: Group chat access rules and message notifications
+- `tests/test_expirations.py`: Proposal expiry and warning tests
+- `tests/test_acceptance_scenarios.py`: 20 end-to-end swap acceptance scenarios
+- `tests/test_admin_stats.py`, `test_notifications.py`, `test_users.py`, `test_item_uploads.py`, `test_graph.py`, `test_monitoring.py`, `test_auth_secret.py`: remaining API and helper tests
 
 ## Install
 
@@ -70,10 +82,22 @@ JWT_SECRET_KEY=<unique long random secret>
 ALLOWED_ORIGINS=https://<your-vercel-domain>
 ```
 
+`DATABASE_URL` must start with `postgresql+psycopg://`. Render shows `postgresql://`
+or `postgres://`, so change the prefix when you paste it.
+
+Render's free PostgreSQL database expires after 30 days, after which the backend
+fails at startup with a hostname resolution error. Upgrade the database or create
+a new one and update `DATABASE_URL`; free databases have no backups, so keep your
+own `pg_dump` copy.
+
 The service creates missing tables on startup, but `create_all()` does not migrate
 an existing database. Use a migration tool before changing the schema in a live
 deployment. The repository SQL files are PostgreSQL setup/seed scripts and are
-optional for a fresh deployment.
+optional for a fresh deployment. For an existing database, apply the matching
+migration script once:
+
+- `database_migrate_item_age_group.sql`: adds `items.age_group`
+- `database_migrate_swap_message_notifications.sql`: allows the `swap_message` notification type
 
 Uploaded images are stored on the service filesystem. Configure a Render
 persistent disk mounted at `/var/data` and set `UPLOAD_DIR=/var/data/uploads`, or
@@ -226,7 +250,10 @@ curl -X PATCH http://127.0.0.1:8000/swaps/<sp_id>/respond \
 
 A rejection cancels the complete cycle, restores pending items to `available`,
 increments the rejector's `rejection_count`, and writes a negative trust log.
-Proposals expire after 24 hours; expiry is checked when a proposal is accessed.
+Proposals expire after 24 hours. A background task checks every 5 minutes, warns
+participants about proposals expiring within an hour, and expires overdue ones.
+Expiry is also checked when a proposal is accessed, and `POST /swaps/process-expirations`
+can trigger a sweep on demand.
 
 ### 5. Verify a completed cycle
 
@@ -345,6 +372,8 @@ Optional variables:
 - `DATABASE_URL` (default: `sqlite:///./equiswap.db`)
 - `JWT_SECRET_KEY` (required in production, at least 32 random characters, e.g. `python -c "import secrets; print(secrets.token_urlsafe(48))"`; the app refuses to start on Render/`ENVIRONMENT=production` with a missing, weak or placeholder value. Elsewhere a random per-process secret is used)
 - `ACCESS_TOKEN_EXPIRE_MINUTES` (default: `60`)
+- `ALLOWED_ORIGINS` (comma-separated CORS origins; default: `http://localhost:5173,http://127.0.0.1:5173`)
+- `UPLOAD_DIR` (item image folder; default: `backend/uploads`)
 
 ### Monitoring and release checks
 
@@ -356,7 +385,7 @@ Optional variables:
 ### Connect Render deployment to GitHub Actions
 
 The `deploy-backend` job in the repository-root
-`.github/workflows/deploy to render.yml` workflow runs after the backend,
+`.github/workflows/deploy-to-render.yml` workflow runs after the backend,
 frontend, and Playwright tests, and only deploys pushes to `main`. It triggers
 Render and waits for the live health endpoint before completing.
 

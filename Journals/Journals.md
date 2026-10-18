@@ -448,3 +448,132 @@ All good.
 N/A
 
 ---
+
+# Week 11: October 5th to October 11th
+
+## Tasks Completed and Time Spent on each Task
+
+| Task                                            | Hours   |
+| ----------------------------------------------- | ------- |
+| Prepare for the final report                    | 4       |
+| Learn how to publish GitHub Pages               | 3       |
+| Deployed app end-to-end testing and bug fixes   | 6       |
+| Presentation preparation                        | 4       |
+| Update documentation                            | 3       |
+| **Week total**                                  | **20**  |
+| **Cumulative total (incl. prior weeks' hours)** | **220** |
+
+---
+
+## Plans / Goals for Next Week
+
+- Continue the final project report
+- Continue preparing the presentation
+- Continue testing preferences in the app and fix bugs if necessary
+
+---
+
+## Reflections
+
+### What has gone well?
+
+All the previously mentioned features have been implemented as expected, and
+the project now includes additional technology such as Playwright end-to-end
+testing.
+
+### What has not gone as expected?
+
+Everything has gone well so far.
+
+### Any changes I need to make for next week?
+
+I need to spend more time preparing for the presentation and refine the app as
+needed.
+
+### Any good practices I should make sure I continue?
+
+Start some tasks in advance when possible and implement additional technology
+when it is useful.
+
+### Anything that is (or might be) causing me not to make the progress I expect next week?
+
+I have another assessment due next week, so progress may be a bit slower.
+
+---
+
+## Project Health
+
+🟢 Green
+
+## Issues Arising
+
+None.
+
+## Strategy to Resolve Project Health and Issues Arising
+
+N/A
+
+---
+
+# Week 12: October 12th to October 18th
+
+## Tasks Completed and Time Spent on each Task
+
+| Task                                                                                   | Hours   |
+| -------------------------------------------------------------------------------------- | ------- |
+| Refine the final report                                                                | 10      |
+| Prepare for the presentation                                                           | 6       |
+| Fix the Render free database expiration issue and migrate local data to Render         | 2       |
+| Update missing docs to the project                                                     | 2       |
+| Keep testing the deployed app                                                          | 4       |
+| **Week total**                                                                         | **24**  |
+| **Cumulative total (incl. prior weeks' hours)**                                        | **244** |
+
+---
+
+## Plans / Goals for Next Week
+
+- Continue the presentation
+- Keep testing the app and find bugs to fix
+
+---
+
+## Reflections
+
+### What has gone well?
+
+The tasks have progressed as expected and the issues found were fixed.
+
+### What has not gone as expected?
+
+The Render free plan database only lasts 30 days, which caused my Render
+deployment to fail. I had to re-create the database and find a way to migrate
+the previous data to Render.
+
+### Any changes I need to make for next week?
+
+I need to prepare as much as I can earlier, make sure the deployed app works as
+expected, and put all the evidence in a folder.
+
+### Any good practices I should make sure I continue?
+
+Keep checking and testing, and fix bugs immediately if an unexpected issue
+happens.
+
+### Anything that is (or might be) causing me not to make the progress I expect next week?
+
+I have another assessment due, so I might spend some time on that project.
+
+---
+
+## Project Health
+
+🟢 Green
+
+## Issues Arising
+
+N/A
+
+## Strategy to Resolve Project Health and Issues Arising
+
+N/A

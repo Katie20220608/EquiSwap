@@ -1,70 +1,89 @@
-EQUISWAP MILESTONE 1 (WEEKS 3-4)
-FOUNDATION ARCHITECTURE FLOW (WEEK 3 ALIGNED)
-==============================================
+EQUISWAP CURRENT APPLICATION ARCHITECTURE
+========================================
 
-+--------------------------------------------------------------------------------------------------+
-|                                 1) PRESENTATION LAYER (CLIENT)                                  |
-|--------------------------------------------------------------------------------------------------|
-| API Consumers: Swagger UI / Postman (future frontend can connect later)                         |
-| Protocol: HTTPS + JSON (REST)                                                                    |
-+--------------------------------------------------------------------------------------------------+
-                                            |
-                                            | REST API calls
-                                            v
-+--------------------------------------------------------------------------------------------------+
-|                            2) APPLICATION LAYER (FASTAPI BACKEND)                               |
-|--------------------------------------------------------------------------------------------------|
-| Entry Point: app/main.py                                                                         |
-| Security: OAuth2 password flow + JWT Bearer token validation                                     |
-|                                                                                                  |
-| Routers and Endpoints                                                                            |
-| - /auth       : POST /register, POST /login, GET /me                                             |
-| - /users      : POST /, GET /, GET /{user_id}, PUT /{user_id}, DELETE /{user_id}                |
-| - /items      : POST /, GET /, GET /{item_id}, PUT /{item_id}, DELETE /{item_id}                |
-| - /wishlists  : POST /, GET /, DELETE /{wishlist_id}                                             |
-| - /health     : GET /health                                                                       |
-+--------------------------------------------------------------------------------------------------+
-                                            |
-                                            | SQLAlchemy ORM operations
-                                            v
-+--------------------------------------------------------------------------------------------------+
-|                      3) DATA LAYER (SQLALCHEMY + RELATIONAL DATABASE)                            |
-|--------------------------------------------------------------------------------------------------|
-| Runtime DB:                                                                                      |
-| - SQLite (default for local development)                                                         |
-| - PostgreSQL (when DATABASE_URL is configured)                                                   |
-|                                                                                                  |
-| Core Milestone-1 Tables                                                                          |
-| - users                                                                                            |
-| - categories                                                                                      |
-| - items                                                                                           |
-| - wishlists                                                                                       |
-+--------------------------------------------------------------------------------------------------+
+Purpose
+-------
+EquiSwap helps families reuse children's toys, books, and learning resources
+through wishlist-driven multi-user swap cycles.
 
+1. PRESENTATION LAYER
+---------------------
+Browser
+  React 19 + Vite + TypeScript single-page application
+  Routes: home, register, login, dashboard, profile, preferences, admin
 
-+--------------------------------------------------------------------------------------------------+
-|                              4) QUALITY LAYER (INITIAL TESTS)                                   |
-|--------------------------------------------------------------------------------------------------|
-| Test Suite: tests/test_crud.py                                                                    |
-| Coverage:                                                                                         |
-| - User register/login                                                                             |
-| - Authenticated users CRUD flow                                                                   |
-| - Items CRUD flow                                                                                 |
-| - Wishlists CRUD flow                                                                             |
-| Role in flow: validates auth + CRUD endpoints                                                     |
-+--------------------------------------------------------------------------------------------------+
+  Family features:
+  - Browse available items; search by name/description and filter by age group
+  - Create, edit, delete, and add photos to item listings
+  - Add or remove wishlist entries
+  - Find compatible swap cycles and propose swaps
+  - Accept or reject proposals; review swap history and trust history
+  - Chat within accepted swap cycles
+  - View notifications and unread counts
+  - Manage users to avoid in future matches
 
+  Admin features:
+  - Review users and item listings; enable or disable accounts
+  - View platform statistics and swap-cycle insights
 
-DATA FLOW SUMMARY
------------------
-Client/API Consumer -> FastAPI Routers -> SQLAlchemy ORM -> Database Tables
-Tests --------------> Verify auth + CRUD behavior across the application layer
+  Session: JWT bearer token held by the frontend auth context/local storage
+  Notifications: REST polling; the app does not use WebSockets
 
+                         HTTPS / JSON REST
+                                |
+                                v
 
-FUTURE SCOPE (NOT PART OF WEEK 3 FOUNDATION)
----------------------------------------------
-- Swap-cycle matching engine (graph-based)
-- Swap proposals and swap history workflows
-- Preference filtering and trust logs
-- Notification services
-- Full CI/CD and production deployment hardening
+2. APPLICATION LAYER
+--------------------
+FastAPI backend (EquiSwap/backend/app)
+  - Authentication and account/password management
+  - Users, directory, profile trust details, and account administration
+  - Item and image-upload endpoints
+  - Wishlist and user-avoidance preference endpoints
+  - Swap graph construction and Tarjan strongly-connected-component matching
+  - Proposal lifecycle, swap completion/history, and trust-score updates
+  - Cycle chat and notification list/read endpoints
+  - Admin statistics and swap insights
+  - Health, request logging, request IDs, and client-error reporting
+
+  SQLAlchemy ORM maps the API operations to the relational database.
+  A background task checks proposal expirations and sends expiry warnings.
+
+                         SQLAlchemy ORM
+                                |
+                                v
+
+3. DATA AND FILE STORAGE
+------------------------
+Relational database (SQLite by default locally; PostgreSQL via DATABASE_URL)
+  - users                 - categories
+  - items                 - wishlists
+  - user_preferences      - swap_proposals
+  - swap_messages         - swap_history
+  - trust_logs            - notifications
+
+Uploaded item photos are files on the backend filesystem, not database blobs.
+The item image_url points to the file served by the backend.
+
+4. TESTING AND DELIVERY
+-----------------------
+Backend: pytest, Ruff
+Frontend: Vitest, Oxlint, TypeScript/Vite build
+End-to-end: Playwright with mocked API and real FastAPI + disposable SQLite
+
+GitHub Actions runs backend/frontend checks and both E2E suites on pushes and
+pull requests. A passing push to main triggers the Render backend deployment;
+CI waits for the deployed health endpoint to report the expected commit.
+The React frontend is hosted on Vercel; PostgreSQL is hosted on Render.
+
+CURRENT REQUEST FLOW
+--------------------
+Family member
+  -> React page and authenticated REST request
+  -> FastAPI router and feature logic
+  -> SQLAlchemy ORM
+  -> SQLite (local) or PostgreSQL (deployed)
+  -> JSON response rendered by the frontend
+
+Swap matching uses current wishlists and available items, then filters out
+matches containing users that the requesting user has chosen to avoid.
