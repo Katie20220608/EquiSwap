@@ -1,6 +1,6 @@
 # EquiSwap
 
-[![CI](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/deploy%20to%20render.yml/badge.svg)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/deploy-to-render.yml)
+[![CI](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/deploy-to-render.yml/badge.svg)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/deploy-to-render.yml)
 [![Backend coverage](https://img.shields.io/badge/backend%20coverage-95.69%25-brightgreen)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/deploy-to-render.yml)
 [![Frontend coverage](https://img.shields.io/badge/frontend%20coverage-90.35%25-brightgreen)](https://github.com/COMP693-Projects-26S2/COMP693_26S2_Project_Yue_Li_1165455/actions/workflows/deploy-to-render.yml)
 
@@ -50,7 +50,7 @@ The frontend communicates with the deployed FastAPI backend on Render for authen
 
 ## Documentation and project files
 
-- User guide (GitHub Pages): https://comp693-projects-26s2.github.io/COMP693_26S2_Project_Yue_Li_1165455/ (source in [docs/](docs/))
+- User guide (GitHub Pages): https://katie20220608.github.io/EquiSwap/ (source in [docs/](docs/))
 - Frontend project guide: [EquiSwap/frontend/README.MD](EquiSwap/frontend/README.MD)
 - Backend project guide: [EquiSwap/backend/README.md](EquiSwap/backend/README.md)
 - Project journal: [Journals/README.md](Journals/README.md)

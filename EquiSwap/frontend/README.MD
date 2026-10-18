@@ -7,9 +7,12 @@ This is the React + Vite frontend for EquiSwap, a family-focused swap platform f
 The frontend provides the user experience for:
 
 - user registration and login
-- browsing available items
+- browsing available items, with search and age-group filtering
+- creating items with photos and an age group
 - managing a personal wishlist
-- viewing and responding to swap proposals
+- finding swap cycles and viewing and responding to swap proposals
+- group chat with the other participants of an accepted swap, to agree a time and place
+- notifications (polled every 10 seconds); message notifications open the related chat
 - checking swap history and trust scores
 - managing a blacklist of users to avoid in future swap matches (Preferences page)
 - admin dashboard operations
@@ -30,10 +33,11 @@ It connects to the FastAPI backend at the configured API base URL and uses local
 
 - `src/App.tsx` — landing page and main app entry
 - `src/main.tsx` — React bootstrap
-- `src/components/` — reusable UI components such as nav, cards, forms
+- `src/components/` — reusable UI components such as nav, cards, forms, `SwapChat` (swap group chat), and `ErrorBoundary`
 - `src/pages/` — auth, dashboard, profile, preferences (blacklist management), and admin pages
 - `src/lib/api.ts` — authenticated API client and types
 - `src/lib/AuthContext.tsx` — auth/session state
+- `src/lib/reportError.ts` — sends uncaught frontend errors to the backend `/client-errors` endpoint
 - `src/test/setup.ts` — test setup for Vitest
 - `e2e/mocked/` — Playwright specs that mock the API
 - `e2e/integration/` — Playwright specs that run against the real backend
@@ -199,7 +203,7 @@ Vitest ignores `e2e/`, so `npm test` only runs the unit tests.
 ### CI
 
 The `e2e-tests` job in the repository-root
-`.github/workflows/deploy to render.yml` workflow runs both suites and uploads
+`.github/workflows/deploy-to-render.yml` workflow runs both suites and uploads
 the `playwright-report/` folder as an artifact. The deploy job waits for it to
 pass.
 
